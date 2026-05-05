@@ -7,6 +7,7 @@ const PLATFORM = [
   { label: 'Камчатская рыбалка', href: '/hub/fishing' },
   { label: 'Маршруты', href: '/routes' },
   { label: 'Карта Камчатки', href: '/map' },
+  { label: 'Планирование поездки', href: '/partners' },
   { label: 'Партнёры', href: '/operators' },
   { label: 'Стать партнёром', href: '/for-operators' },
   { label: 'Помощь туристам', href: '/help/tourists' },
