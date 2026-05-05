@@ -1,4 +1,4 @@
-import { AlertTriangle, Package, Radio, Heart, Users } from 'lucide-react';
+import { AlertTriangle, Backpack, Radio, Phone, Users, ShieldAlert, Flame, Wind, Mountain, Waves, Eye, Thermometer, CloudLightning, Signal, Leaf } from 'lucide-react';
 import { HAZARD_LABELS } from './types';
 import type { PlaceSafety as SafetyData } from './types';
 
@@ -7,160 +7,23 @@ interface Props {
   placeId: string;
 }
 
-// 5.1 Опасности
-function SafetyHazards({ hazardTypes }: { hazardTypes: string[] }) {
-  if (!hazardTypes.length) return null;
-  return (
-    <div>
-      <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2 uppercase tracking-wide">Опасности</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {hazardTypes.map(h => {
-          const info = HAZARD_LABELS[h] ?? { label: h };
-          return (
-            <div key={h} className="flex items-center gap-2 text-sm">
-              <AlertTriangle className="w-4 h-4 text-[var(--warning)] flex-shrink-0" />
-              <span className="text-[var(--text-secondary)]">{info.label}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// 5.2 Снаряжение
-function SafetyGear({ requiredGear }: { requiredGear: string[] }) {
-  if (!requiredGear.length) return null;
-  return (
-    <div>
-      <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2 uppercase tracking-wide flex items-center gap-1.5">
-        <Package className="w-3.5 h-3.5" /> Что взять с собой
-      </h3>
-      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-        {requiredGear.map((item, i) => (
-          <li key={i} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] flex-shrink-0" />
-            {item}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-// 5.3 Связь и эвакуация
-function SafetyConnectivity({ satRequired, emergencyAccess, phoneRanger }: {
-  satRequired: boolean | null;
-  emergencyAccess: string | null;
-  phoneRanger: string | null;
-}) {
-  const hasData = satRequired != null || emergencyAccess || phoneRanger;
-  if (!hasData) return null;
-  return (
-    <div>
-      <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2 uppercase tracking-wide flex items-center gap-1.5">
-        <Radio className="w-3.5 h-3.5" /> Связь и эвакуация
-      </h3>
-      <div className="space-y-1.5 text-sm">
-        {satRequired != null && (
-          <div className="flex items-center gap-2">
-            <span className="text-[var(--text-muted)] w-40 flex-shrink-0">Спутниковая связь</span>
-            <span className={`font-medium ${satRequired ? 'text-[var(--warning)]' : 'text-[var(--text-primary)]'}`}>
-              {satRequired ? 'Требуется' : 'Не требуется'}
-            </span>
-          </div>
-        )}
-        {emergencyAccess && (
-          <div className="flex items-start gap-2">
-            <span className="text-[var(--text-muted)] w-40 flex-shrink-0">Эвакуация</span>
-            <span className="text-[var(--text-secondary)]">{emergencyAccess}</span>
-          </div>
-        )}
-        <div className="flex items-start gap-2 pt-1">
-          <span className="text-[var(--text-muted)] w-40 flex-shrink-0">Экстренный звонок</span>
-          <div className="space-y-1">
-            <a href="tel:112" className="block text-[var(--ocean)] hover:text-[var(--accent)] font-medium transition-colors">
-              112 — единый
-            </a>
-            {phoneRanger ? (
-              <a href={`tel:${phoneRanger}`} className="block text-[var(--ocean)] hover:text-[var(--accent)] transition-colors">
-                {phoneRanger} — МЧС Камчатка
-              </a>
-            ) : (
-              <a href="tel:+74152235362" className="block text-[var(--ocean)] hover:text-[var(--accent)] transition-colors">
-                +7 (415) 223-53-62 — МЧС Камчатка
-              </a>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// 5.4 Медпомощь
-function SafetyMedical({ nearestMedicalKm, medicalInfo }: {
-  nearestMedicalKm: number | null;
-  medicalInfo: string | null;
-}) {
-  if (!nearestMedicalKm && !medicalInfo) return null;
-  return (
-    <div>
-      <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2 uppercase tracking-wide flex items-center gap-1.5">
-        <Heart className="w-3.5 h-3.5" /> Медицинская помощь
-      </h3>
-      <div className="space-y-1.5 text-sm">
-        {nearestMedicalKm != null && (
-          <div className="flex items-center gap-2">
-            <span className="text-[var(--text-muted)] w-40 flex-shrink-0">До медпункта</span>
-            <span className="font-medium text-[var(--text-primary)]">{nearestMedicalKm} км</span>
-          </div>
-        )}
-        {medicalInfo && (
-          <p className="text-[var(--text-secondary)]">{medicalInfo}</p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// 5.5 Вместимость и регистрация
-function SafetyCapacity({ capacityPerDay, optimalGroupSize, registrationRequired }: {
-  capacityPerDay: number | null;
-  optimalGroupSize: number | null;
-  registrationRequired: boolean;
-}) {
-  const hasData = capacityPerDay != null || optimalGroupSize != null || registrationRequired;
-  if (!hasData) return null;
-  return (
-    <div>
-      <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2 uppercase tracking-wide flex items-center gap-1.5">
-        <Users className="w-3.5 h-3.5" /> Вместимость и регистрация
-      </h3>
-      <div className="space-y-1.5 text-sm">
-        {capacityPerDay != null && (
-          <div className="flex items-center gap-2">
-            <span className="text-[var(--text-muted)] w-40 flex-shrink-0">Вместимость</span>
-            <span className="text-[var(--text-primary)]">{capacityPerDay} чел/день</span>
-          </div>
-        )}
-        {optimalGroupSize != null && (
-          <div className="flex items-center gap-2">
-            <span className="text-[var(--text-muted)] w-40 flex-shrink-0">Оптимальная группа</span>
-            <span className="text-[var(--text-primary)]">до {optimalGroupSize} чел</span>
-          </div>
-        )}
-        {registrationRequired && (
-          <div className="flex items-start gap-2">
-            <span className="text-[var(--text-muted)] w-40 flex-shrink-0">Регистрация МЧС</span>
-            <a href="/safety/register" className="text-[var(--warning)] font-semibold hover:underline">
-              Обязательна → зарегистрироваться
-            </a>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+function HazardIcon({ hazard }: { hazard: string }) {
+  const cls = 'w-3.5 h-3.5 flex-shrink-0';
+  switch (hazard) {
+    case 'bears':
+    case 'wildlife':      return <AlertTriangle className={cls} />;
+    case 'avalanche':     return <Wind className={cls} />;
+    case 'rockfall':      return <Mountain className={cls} />;
+    case 'thermal':       return <Thermometer className={cls} />;
+    case 'volcanic_gas':  return <Flame className={cls} />;
+    case 'altitude':      return <Mountain className={cls} />;
+    case 'river_crossing':return <Waves className={cls} />;
+    case 'fog':           return <Eye className={cls} />;
+    case 'ice':           return <CloudLightning className={cls} />;
+    case 'no_signal':     return <Signal className={cls} />;
+    case 'weather':       return <CloudLightning className={cls} />;
+    default:              return <AlertTriangle className={cls} />;
+  }
 }
 
 export default function PlaceSafety({ safety, placeId: _ }: Props) {
@@ -169,44 +32,125 @@ export default function PlaceSafety({ safety, placeId: _ }: Props) {
     safety.requiredGear.length > 0 ||
     safety.satCommunicatorRequired != null ||
     safety.emergencyAccess ||
-    safety.phoneRangerMches ||
     safety.nearestMedicalKm != null ||
-    safety.medicalInfo ||
     safety.capacityPerDay != null ||
     safety.registrationRequired;
 
   if (!hasAnyData) return null;
 
   return (
-    <section className="max-w-3xl mx-auto px-4">
-      <div className="ds-card p-5 border-l-4 border-[var(--warning)]">
-        <h2 className="text-base font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-[var(--warning)]" />
-          Безопасность
-        </h2>
-        <div className="space-y-5 divide-y divide-[var(--border)]">
-          <SafetyHazards hazardTypes={safety.hazardTypes} />
-          <div className="pt-4"><SafetyGear requiredGear={safety.requiredGear} /></div>
-          <div className="pt-4">
-            <SafetyConnectivity
-              satRequired={safety.satCommunicatorRequired}
-              emergencyAccess={safety.emergencyAccess}
-              phoneRanger={safety.phoneRangerMches}
-            />
+    <section className="max-w-3xl mx-auto px-4 mt-6">
+      <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--warning)]/5 overflow-hidden">
+
+        {/* Header */}
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--warning)]/20">
+          <ShieldAlert className="w-4 h-4 text-[var(--warning)]" />
+          <span className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-wide">
+            Безопасность
+          </span>
+        </div>
+
+        <div className="p-4 space-y-4">
+
+          {/* Hazard chips */}
+          {safety.hazardTypes.length > 0 && (
+            <div>
+              <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wide mb-2">Опасности</p>
+              <div className="flex flex-wrap gap-2">
+                {safety.hazardTypes.map(h => {
+                  const info = HAZARD_LABELS[h] ?? { label: h };
+                  return (
+                    <span
+                      key={h}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)]"
+                    >
+                      <HazardIcon hazard={h} />
+                      {info.label}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Gear */}
+          {safety.requiredGear.length > 0 && (
+            <div>
+              <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                <Backpack className="w-3.5 h-3.5" /> Снаряжение
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {safety.requiredGear.map((g, i) => (
+                  <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-secondary)]">
+                    {g}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Nature protection limit */}
+          {safety.capacityPerDay != null && (
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-[var(--success)]/8 border border-[var(--success)]/20">
+              <Leaf className="w-4 h-4 text-[var(--success)] shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-bold text-[var(--success)] uppercase tracking-wide">
+                  Природоохранный лимит
+                </p>
+                <p className="text-sm text-[var(--text-primary)] font-semibold mt-0.5">
+                  до {safety.capacityPerDay} человек в сутки
+                </p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                  Установлен для защиты экосистемы и дикой природы
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Connectivity + Registration row */}
+          {(safety.satCommunicatorRequired || safety.registrationRequired) && (
+            <div className="flex flex-wrap gap-3">
+              {safety.satCommunicatorRequired && (
+                <div className="flex items-center gap-2 text-xs text-[var(--warning)]">
+                  <Radio className="w-3.5 h-3.5" />
+                  <span className="font-medium">Нужна спутниковая связь</span>
+                </div>
+              )}
+              {safety.registrationRequired && (
+                <a href="/safety/register" className="flex items-center gap-2 text-xs text-[var(--warning)] hover:underline">
+                  <Users className="w-3.5 h-3.5" />
+                  <span className="font-medium">Регистрация МЧС обязательна</span>
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Emergency contacts */}
+          <div className="flex flex-wrap gap-2 pt-1 border-t border-[var(--warning)]/15">
+            <p className="w-full text-[11px] text-[var(--text-muted)] uppercase tracking-wide mb-1 flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5" /> Экстренная помощь
+            </p>
+            <a
+              href="tel:112"
+              className="inline-flex items-center gap-2 text-sm font-bold text-white bg-[var(--danger)] px-4 py-2 rounded-xl hover:opacity-90 transition-opacity"
+            >
+              <Phone className="w-3.5 h-3.5" /> 112
+            </a>
+            <a
+              href={`tel:${safety.phoneRangerMches ?? '+74152235362'}`}
+              className="inline-flex items-center gap-2 text-sm font-medium text-[var(--text-primary)] bg-[var(--bg-card)] border border-[var(--border)] px-4 py-2 rounded-xl hover:border-[var(--accent)] transition-colors"
+            >
+              <Phone className="w-3.5 h-3.5" />
+              {safety.phoneRangerMches ?? '+7 415 223-53-62'} МЧС
+            </a>
           </div>
-          <div className="pt-4">
-            <SafetyMedical
-              nearestMedicalKm={safety.nearestMedicalKm}
-              medicalInfo={safety.medicalInfo}
-            />
-          </div>
-          <div className="pt-4">
-            <SafetyCapacity
-              capacityPerDay={safety.capacityPerDay}
-              optimalGroupSize={safety.optimalGroupSize}
-              registrationRequired={safety.registrationRequired}
-            />
-          </div>
+
+          {/* Emergency access */}
+          {safety.emergencyAccess && (
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <span className="font-medium text-[var(--text-primary)]">Эвакуация:</span> {safety.emergencyAccess}
+            </p>
+          )}
         </div>
       </div>
     </section>

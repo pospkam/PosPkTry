@@ -46,6 +46,7 @@ export async function GET(
          p.eco_permit_required,
          p.eco_rules,
          p.eco_permit_url,
+         p.indigenous_info,
          sp.difficulty_level,
          sp.altitude_m,
          sp.altitude_diff_m,
@@ -201,6 +202,20 @@ export async function GET(
           rules: (r.eco_rules as string | null) ?? null,
           permitUrl: (r.eco_permit_url as string | null) ?? null,
         } : null,
+
+        indigenous: (() => {
+          const raw = r.indigenous_info as Record<string, unknown> | null;
+          if (!raw) return null;
+          const peoples = Array.isArray(raw.peoples) ? (raw.peoples as string[]) : [];
+          if (peoples.length === 0 && !raw.local_name && !raw.sacred) return null;
+          return {
+            peoples,
+            localName: (raw.local_name as string | null) ?? null,
+            sacred: Boolean(raw.sacred),
+            traditionalUse: (raw.traditional_use as string | null) ?? null,
+            respectNotes: (raw.respect_notes as string | null) ?? null,
+          };
+        })(),
 
         safety: {
           difficultyLevel: r.difficulty_level != null ? Number(r.difficulty_level) : null,

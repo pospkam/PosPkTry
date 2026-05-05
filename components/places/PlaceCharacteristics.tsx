@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Layers, TrendingUp, Users, AlertTriangle, Footprints } from 'lucide-react';
+import { Mountain, Layers, TrendingUp, MapPin, Users, Footprints, AlertTriangle, Stethoscope } from 'lucide-react';
 import { LOCATION_TYPE_LABELS, DIFFICULTY_LABELS, HAZARD_LABELS } from './types';
 import type { PlaceSafety } from './types';
 
@@ -12,126 +12,132 @@ interface Props {
 }
 
 const ZONE_LABELS: Record<string, string> = {
-  avachinsky:  'Авачинский район',
-  mutnovsky:   'Мутновский район',
-  klyuchevsky: 'Ключевская группа',
-  nalychevo:   'Налычево',
-  kronotsky:   'Кроноцкий заповедник',
-  southern:    'Южная Камчатка',
-  central:     'Центральная Камчатка',
-  northern:    'Северная Камчатка',
-  petropavlovsk: 'Петропавловск-Камчатский',
-  commander:   'Командорские острова',
+  avachinsky:    'Авачинский',
+  mutnovsky:     'Мутновский',
+  klyuchevsky:   'Ключевская группа',
+  nalychevo:     'Налычево',
+  kronotsky:     'Кроноцкий',
+  southern:      'Южная Камчатка',
+  central:       'Центральная',
+  northern:      'Северная',
+  petropavlovsk: 'Петропавловск',
+  commander:     'Командорские о-ва',
 };
 
-const DIFFICULTY_COLORS: Record<number, string> = {
-  1: 'text-[var(--success)]',
-  2: 'text-[var(--success)]',
-  3: 'text-[var(--warning)]',
-  4: 'text-[var(--accent)]',
-  5: 'text-[var(--danger)]',
+const DIFFICULTY_COLOR: Record<number, string> = {
+  1: 'text-[var(--success)] bg-[var(--success)]/10 border-[var(--success)]/25',
+  2: 'text-[var(--success)] bg-[var(--success)]/10 border-[var(--success)]/25',
+  3: 'text-[var(--warning)] bg-[var(--warning)]/10 border-[var(--warning)]/25',
+  4: 'text-[var(--accent)] bg-[var(--accent)]/10 border-[var(--accent)]/25',
+  5: 'text-[var(--danger)] bg-[var(--danger)]/10 border-[var(--danger)]/25',
 };
+
+interface Stat { icon: React.ReactNode; label: string; value: string; color?: string }
 
 export default function PlaceCharacteristics({ locationType, zone, safety, terrainType }: Props) {
-  const typeLabel  = LOCATION_TYPE_LABELS[locationType ?? 'other'] ?? 'Место';
-  const diff       = safety.difficultyLevel;
-  const diffLabel  = diff != null ? DIFFICULTY_LABELS[diff] ?? null : null;
-  const diffColor  = diff != null ? (DIFFICULTY_COLORS[diff] ?? 'text-[var(--text-primary)]') : '';
-  const zoneLabel  = zone ? (ZONE_LABELS[zone] ?? zone) : null;
-  const topHazards = safety.hazardTypes.slice(0, 4);
+  const stats: Stat[] = [];
 
-  const items: { icon: React.ReactNode; label: string; value: React.ReactNode }[] = [];
-
-  items.push({
-    icon: <Layers className="w-4 h-4 text-[var(--ocean)]" />,
+  stats.push({
+    icon: <Layers className="w-4 h-4" />,
     label: 'Тип',
-    value: <span className="font-semibold text-[var(--text-primary)]">{typeLabel}</span>,
+    value: LOCATION_TYPE_LABELS[locationType ?? 'other'] ?? 'Место',
   });
 
   if (safety.altitudeM != null) {
-    items.push({
-      icon: <TrendingUp className="w-4 h-4 text-[var(--ocean)]" />,
+    stats.push({
+      icon: <Mountain className="w-4 h-4" />,
       label: 'Высота',
-      value: <span className="font-semibold text-[var(--text-primary)]">{safety.altitudeM.toLocaleString('ru-RU')} м</span>,
+      value: `${safety.altitudeM.toLocaleString('ru-RU')} м`,
     });
   }
 
-  if (diffLabel) {
-    items.push({
-      icon: <AlertTriangle className="w-4 h-4 text-[var(--warning)]" />,
+  if (safety.difficultyLevel != null) {
+    const d = safety.difficultyLevel;
+    stats.push({
+      icon: <TrendingUp className="w-4 h-4" />,
       label: 'Сложность',
-      value: <span className={`font-semibold ${diffColor}`}>{diffLabel}</span>,
+      value: DIFFICULTY_LABELS[d] ?? String(d),
+      color: DIFFICULTY_COLOR[d],
     });
   }
 
-  if (zoneLabel) {
-    items.push({
-      icon: <MapPin className="w-4 h-4 text-[var(--accent)]" />,
+  if (zone) {
+    stats.push({
+      icon: <MapPin className="w-4 h-4" />,
       label: 'Район',
-      value: <span className="font-semibold text-[var(--text-primary)]">{zoneLabel}</span>,
-    });
-  }
-
-  if (safety.capacityPerDay != null) {
-    items.push({
-      icon: <Users className="w-4 h-4 text-[var(--ocean)]" />,
-      label: 'Вместимость',
-      value: <span className="font-semibold text-[var(--text-primary)]">{safety.capacityPerDay} чел/день</span>,
+      value: ZONE_LABELS[zone] ?? zone,
     });
   }
 
   if (terrainType) {
-    items.push({
-      icon: <Footprints className="w-4 h-4 text-[var(--ocean)]" />,
+    stats.push({
+      icon: <Footprints className="w-4 h-4" />,
       label: 'Рельеф',
-      value: <span className="font-semibold text-[var(--text-primary)]">{terrainType}</span>,
+      value: terrainType,
     });
   }
 
-  if (items.length === 0 && topHazards.length === 0) return null;
+  if (safety.capacityPerDay != null) {
+    stats.push({
+      icon: <Users className="w-4 h-4" />,
+      label: 'Вместимость',
+      value: `${safety.capacityPerDay} чел/день`,
+    });
+  }
+
+  if (safety.nearestMedicalKm != null) {
+    stats.push({
+      icon: <Stethoscope className="w-4 h-4" />,
+      label: 'До медпомощи',
+      value: `${safety.nearestMedicalKm} км`,
+    });
+  }
+
+  const topHazards = safety.hazardTypes.slice(0, 6);
+
+  if (stats.length === 0 && topHazards.length === 0) return null;
 
   return (
-    <section className="max-w-3xl mx-auto px-4">
-      <div className="ds-card p-5 space-y-4">
-        {/* Grid of facts */}
-        {items.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {items.map((item, i) => (
-              <div key={i} className="flex flex-col gap-1">
-                <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] uppercase tracking-wide">
-                  {item.icon}
-                  {item.label}
-                </div>
-                <div className="text-sm">{item.value}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Key hazards as compact badges */}
-        {topHazards.length > 0 && (
-          <>
-            {items.length > 0 && <div className="border-t border-[var(--border)]" />}
-            <div>
-              <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide mb-2">Что важно знать</p>
-              <div className="flex flex-wrap gap-2">
-                {topHazards.map(h => {
-                  const info = HAZARD_LABELS[h] ?? { label: h };
-                  return (
-                    <span
-                      key={h}
-                      className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border)]"
-                    >
-                      <AlertTriangle className="w-3 h-3 text-[var(--warning)]" />
-                      {info.label}
-                    </span>
-                  );
-                })}
-              </div>
+    <section className="mt-4">
+      {/* Stat pills — horizontal scroll */}
+      {stats.length > 0 && (
+        <div
+          className="flex gap-2 overflow-x-auto px-4 pb-1"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {stats.map((s, i) => (
+            <div
+              key={i}
+              className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border text-sm
+                ${s.color ?? 'text-[var(--text-primary)] bg-[var(--bg-card)] border-[var(--border)]'}`}
+            >
+              <span className="text-[var(--text-muted)]">{s.icon}</span>
+              <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide whitespace-nowrap">
+                {s.label}
+              </span>
+              <span className="font-semibold whitespace-nowrap">{s.value}</span>
             </div>
-          </>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {/* Hazard chips */}
+      {topHazards.length > 0 && (
+        <div className="flex flex-wrap gap-2 px-4 mt-3">
+          {topHazards.map(h => {
+            const info = HAZARD_LABELS[h] ?? { label: h };
+            return (
+              <span
+                key={h}
+                className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-[var(--warning)]/10 text-[var(--warning)] border border-[var(--warning)]/25"
+              >
+                <AlertTriangle className="w-3 h-3" />
+                {info.label}
+              </span>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

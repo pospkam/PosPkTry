@@ -78,6 +78,14 @@ export interface PlaceEco {
   permitUrl: string | null;
 }
 
+export interface PlaceIndigenous {
+  peoples: string[];
+  localName: string | null;
+  sacred: boolean;
+  traditionalUse: string | null;
+  respectNotes: string | null;
+}
+
 export interface PlaceData {
   id: string;
   name: string;
@@ -100,6 +108,7 @@ export interface PlaceData {
   updatedAt: string | null;
   kuzmichReview: string | null;
   eco: PlaceEco | null;
+  indigenous: PlaceIndigenous | null;
   safety: PlaceSafety;
   realtime: PlaceRealtime | null;
   routes: PlaceRoute[];
