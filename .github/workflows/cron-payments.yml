@@ -6,8 +6,6 @@ name: Cron — Abandoned Booking Recovery
 #   24+ h → auto-cancel
 
 on:
-  schedule:
-    - cron: '23 * * * *'   # :23 every hour (avoid :00 spikes)
   workflow_dispatch:        # manual trigger from GitHub Actions UI
 
 jobs:

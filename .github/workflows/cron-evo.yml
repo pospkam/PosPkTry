@@ -2,8 +2,6 @@ name: Cron — Evo System (Growth + Evolution)
 
 # Runs every 6 hours: scans project health, proposes fixes
 on:
-  schedule:
-    - cron: '0 */6 * * *'  # 00:00, 06:00, 12:00, 18:00 UTC
   workflow_dispatch:        # manual trigger
 
 jobs:

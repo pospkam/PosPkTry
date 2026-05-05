@@ -1,8 +1,6 @@
 name: Cron — Watchdog
 
 on:
-  schedule:
-    - cron: '12,42 * * * *'
   workflow_dispatch:
 
 jobs:
