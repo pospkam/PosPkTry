@@ -58,9 +58,10 @@ const CARDS: Card[] = [
 
 interface Props {
   routeId?: string;
+  source?: string;
 }
 
-function trackClick(cardKey: string, routeId?: string) {
+function trackClick(cardKey: string, source: string, routeId?: string) {
   trackLeadEvent({
     ...LEAD_EVENTS.CLICK_AFFILIATE_LINK,
     event_label: `yandex_travel_${cardKey}`,
@@ -72,14 +73,14 @@ function trackClick(cardKey: string, routeId?: string) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       partner: cardKey,
-      source: routeId ? `route_${routeId}` : 'route_detail',
+      source,
       subId: routeId,
       referrer: typeof window !== 'undefined' ? window.location.href : null,
     }),
   }).catch(() => {/* fire-and-forget */});
 }
 
-export default function YandexTravelBlock({ routeId }: Props) {
+export default function YandexTravelBlock({ routeId, source = 'route_detail' }: Props) {
   return (
     <section className="mt-10 pt-8 border-t border-[var(--border)]">
       {/* Header */}
@@ -98,7 +99,7 @@ export default function YandexTravelBlock({ routeId }: Props) {
           rel="noopener noreferrer sponsored"
           className="flex items-center gap-1 text-xs hover:underline"
           style={{ color: 'var(--ocean)' }}
-          onClick={() => trackClick('yt_main', routeId)}
+          onClick={() => trackClick('yt_main', source, routeId)}
         >
           Открыть <ArrowRight className="w-3 h-3" />
         </a>
@@ -112,7 +113,7 @@ export default function YandexTravelBlock({ routeId }: Props) {
             href={card.url}
             target="_blank"
             rel="noopener noreferrer sponsored"
-            onClick={() => trackClick(card.key, routeId)}
+            onClick={() => trackClick(card.key, source, routeId)}
             className="group flex flex-col gap-2 p-3.5 rounded-lg border transition-all hover:shadow-sm hover:-translate-y-0.5"
             style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}
           >
