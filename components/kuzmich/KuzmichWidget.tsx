@@ -196,25 +196,6 @@ export default function KuzmichWidget() {
     if (open) setTimeout(() => inputRef.current?.focus(), 100);
   }, [open]);
 
-  // Скрываем на определённых страницах
-  if (HIDDEN_PATHS.some(p => pathname?.startsWith(p))) return null;
-
-  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5_000_000) return;
-    setImageFile(file);
-    const reader = new FileReader();
-    reader.onload = ev => setImagePreview(ev.target?.result as string);
-    reader.readAsDataURL(file);
-  }
-
-  function clearImage() {
-    setImageFile(null);
-    setImagePreview(null);
-    if (fileRef.current) fileRef.current.value = '';
-  }
-
   // Geo: read location from GeoContext (never request permission here)
   const { location, permissionState, mode } = useGeo();
 
@@ -291,6 +272,25 @@ export default function KuzmichWidget() {
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [loading, sessionId, messages, imageFile, imagePreview]);
+
+  // Скрываем на определённых страницах
+  if (HIDDEN_PATHS.some(p => pathname?.startsWith(p))) return null;
+
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5_000_000) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = ev => setImagePreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  function clearImage() {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileRef.current) fileRef.current.value = '';
+  }
 
   return (
     <>

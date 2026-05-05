@@ -907,7 +907,7 @@ async function generateDayPlans(
 
   // ── Active days budget ──
   const departureDays = 1;
-  let activeBudget = tripDays - 1 - departureDays; // minus arrival, minus departure
+  const activeBudget = tripDays - 1 - departureDays; // minus arrival, minus departure
 
   // Determine zone allocation
   const zoneBlocks: Array<{ zone: ZoneId; interests: string[]; activeDays: number }> = [];

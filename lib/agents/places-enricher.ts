@@ -17,7 +17,6 @@ import { pool } from '@/lib/db-pool';
 import { callDeepSeek } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const JSDOM = (require('jsdom') as any).JSDOM as new (html: string) => { window: { document: Document } };
 
 export interface PlacesEnricherResult {

@@ -8,6 +8,7 @@
     "no-console": "off",
     "no-debugger": "error",
     "react/display-name": "warn",
-    "@next/next/no-img-element": "warn"
+    "@next/next/no-img-element": "warn",
+    "@typescript-eslint/no-explicit-any": "off"
   }
 }

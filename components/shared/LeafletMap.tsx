@@ -91,9 +91,7 @@ export default function LeafletMap({
   locationPriority = 'highAccuracy',
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const clusterRef = useRef<any>(null);
 
   useEffect(() => {
@@ -151,7 +149,6 @@ export default function LeafletMap({
       }).addTo(map);
 
       // Группа кластеров
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const clusterGroup = (L as any).markerClusterGroup({
         chunkedLoading: true,
         chunkInterval: 200,

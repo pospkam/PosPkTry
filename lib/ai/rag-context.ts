@@ -216,7 +216,6 @@ export async function buildGeoContext(
 }
 
 // ── Главная функция: строит RAG-блок для инжекта в промпт ────────
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RAGResult = { routes: RankedRoute[]; tours: Awaited<ReturnType<typeof findRelevantTours>> };
 
 export async function buildRAGContext(

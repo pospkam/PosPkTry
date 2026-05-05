@@ -58,8 +58,7 @@ async function maxReplyWithButtons(chatId: number, text: string, buttons: MaxBut
   const api = getApi();
   if (!api) return;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (api.sendMessageToChat as any)(chatId, text, {
+    await (api.sendMessageToChat as (chatId: number, text: string, opts: unknown) => Promise<unknown>)(chatId, text, {
       format: 'html',
       attachments: [{ type: 'inline_keyboard', payload: { buttons } }],
     });

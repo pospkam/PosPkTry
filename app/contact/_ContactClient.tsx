@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Phone, User, MessageSquare, Calendar, Users, Send, CheckCircle } from 'lucide-react';
 
 const ACTIVITIES = [
@@ -88,13 +89,13 @@ export default function ContactClient() {
             Спасибо! Наш специалист свяжется с вами в ближайшее время.
             AI Кузьмич уже подбирает маршрут под ваши пожелания.
           </p>
-          <a
+          <Link
             href="/"
             className="inline-block mt-6 px-6 py-2.5 rounded-lg text-sm font-medium text-white"
             style={{ background: 'var(--accent)' }}
           >
             На главную
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -105,9 +106,9 @@ export default function ContactClient() {
       <div className="max-w-lg mx-auto px-4 pt-20 pb-12">
         {/* Header */}
         <div className="mb-8">
-          <a href="/" className="text-sm text-[var(--ocean)] hover:underline mb-4 inline-block">
+          <Link href="/" className="text-sm text-[var(--ocean)] hover:underline mb-4 inline-block">
             ← KamchatourHub
-          </a>
+          </Link>
           <h1 className="text-3xl font-bold text-[var(--text-primary)] font-[var(--font-playfair)]">
             Оставить заявку
           </h1>

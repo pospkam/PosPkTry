@@ -609,7 +609,7 @@ export async function runIntelligenceCycle(): Promise<IntelligenceReport> {
   const domainEntries = Object.entries(intelligenceDomains);
   const gatherResults = await Promise.allSettled(
     domainEntries.map(async ([key, config]) => {
-      let signals = await gatherDomain(key, config);
+      const signals = await gatherDomain(key, config);
 
       // ── travel_ai enrichment: add HN + Firecrawl sources ──
       if (key === 'travel_ai') {

@@ -202,7 +202,7 @@ async function aiCodeReview(): Promise<GrowthIssue[]> {
 
 export async function runGrowthScan(scanType: string = 'full'): Promise<GrowthScanResult> {
   const start = Date.now();
-  let issues: GrowthIssue[] = [];
+  const issues: GrowthIssue[] = [];
 
   if (scanType === 'full' || scanType === 'code') {
     const [dead, debt] = await Promise.all([scanDeadCode(), scanTechDebt()]);

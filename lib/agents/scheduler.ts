@@ -132,9 +132,9 @@ export class AgentScheduler {
     try {
       // Dynamic import of agent
       const agencyName = this.agentIdToModule(config.agentId);
-      const module = await import(`@/lib/agents/agencies/${agencyName}`);
+      const agentModule = await import(`@/lib/agents/agencies/${agencyName}`);
 
-      const Agency = module[this.agentIdToClass(config.agentId)];
+      const Agency = agentModule[this.agentIdToClass(config.agentId)];
       if (!Agency) {
         throw new Error(`Agency class not found for ${config.agentId}`);
       }

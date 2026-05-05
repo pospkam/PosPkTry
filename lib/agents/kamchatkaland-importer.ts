@@ -14,7 +14,6 @@
 import { createHash } from 'crypto';
 import { pool } from '@/lib/db-pool';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const JSDOM = (require('jsdom') as any).JSDOM as new (html: string) => { window: { document: Document } };
 
 const BASE = 'https://kamchatkaland.ru';
