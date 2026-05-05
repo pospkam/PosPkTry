@@ -1,10 +1,12 @@
-// Kamchatour Hub Service Worker -- cache-first для офлайн-доступа к турам
-// Кэш: статика + каталог туров + последние 10 просмотренных страниц туров
+// Kamchatour Hub Service Worker -- cache-first для офлайн-доступа
+// Кэш: статика + карточки мест /places/[id] + туры + API /api/places/[id]
 // + тайлы OpenTopoMap для офлайн-карты (управляются через postMessage)
 // + базовые тайлы зум 7 для всей Камчатки (кэшируются автоматически)
+// ВАЖНО: Камчатка = плохое покрытие сети. Каждая открытая карточка кэшируется.
 
-const CACHE_NAME = 'kamchatour-v5'; // bumped: авто-кэширование тайлов при просмотре + фоновая подгрузка зум 10
-const MAX_TOUR_PAGES = 10;
+const CACHE_NAME = 'kamchatour-v6'; // bumped: places + api caching
+const MAX_PLACE_PAGES = 30; // последние 30 карточек мест — туристы просматривают маршрут заранее
+const API_CACHE_NAME = 'kh-api-v1'; // отдельный кэш для API-ответов
 
 // ─── Tile cache constants ──────────────────────────────────────────────────
 const TILE_CACHE_PREFIX = 'kh-tiles-';
@@ -98,6 +100,14 @@ function isTourPage(url) {
   return /^\/tours\/[a-f0-9-]+$/i.test(new URL(url).pathname);
 }
 
+function isPlacePage(url) {
+  return /^\/places\/[a-f0-9-]+$/i.test(new URL(url).pathname);
+}
+
+function isPlaceApiRequest(url) {
+  return /^\/api\/places\/[a-f0-9-]+$/i.test(new URL(url).pathname);
+}
+
 // Проверка: статический ассет Next.js
 function isStaticAsset(url) {
   const pathname = new URL(url).pathname;
@@ -107,6 +117,16 @@ function isStaticAsset(url) {
          pathname.endsWith('.js') ||
          pathname.endsWith('.woff2') ||
          pathname.endsWith('.woff');
+}
+
+// LRU-эвикция: удаляем старые карточки мест, оставляем MAX_PLACE_PAGES
+async function evictOldPlacePages(cache) {
+  const keys = await cache.keys();
+  const placeKeys = keys.filter((req) => isPlacePage(req.url));
+  if (placeKeys.length > MAX_PLACE_PAGES) {
+    const toDelete = placeKeys.slice(0, placeKeys.length - MAX_PLACE_PAGES);
+    await Promise.all(toDelete.map((key) => cache.delete(key)));
+  }
 }
 
 // LRU-эвикция: удаляем старые туры, оставляем MAX_TOUR_PAGES
@@ -256,9 +276,35 @@ function isOfflineCapable(pathname) {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
-  // Пропускаем не-GET запросы и API
+  // Пропускаем не-GET запросы
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
+
+  // /api/places/[id] — кэшируем отдельно: это критичные данные для офлайна
+  if (isPlaceApiRequest(url.href)) {
+    event.respondWith(
+      caches.open(API_CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(request);
+        try {
+          const response = await fetch(request);
+          if (response.ok) {
+            cache.put(request, response.clone());
+          }
+          return response;
+        } catch {
+          // Нет сети — отдаём кэш: турист уже открывал эту карточку
+          if (cached) return cached;
+          return new Response(JSON.stringify({ success: false, error: 'Нет подключения. Откройте карточку онлайн заранее.' }), {
+            status: 503,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      })
+    );
+    return;
+  }
+
+  // Остальные API — не кэшируем
   if (url.pathname.startsWith('/api/')) return;
 
   // Тайлы OpenTopoMap — cache-first c прозрачным PNG fallback
@@ -280,6 +326,29 @@ self.addEventListener('fetch', (event) => {
           return response;
         });
       })
+    );
+    return;
+  }
+
+  // Карточки мест /places/[id]: network-first + кэш офлайн + LRU 30 страниц
+  // Критично для Камчатки: турист смотрит карточки дома, идёт без связи
+  if (isPlacePage(request.url)) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(async (cache) => {
+              await cache.put(request, clone);
+              await evictOldPlacePages(cache);
+            });
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match(request);
+          return cached || caches.match('/offline');
+        })
     );
     return;
   }

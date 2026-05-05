@@ -75,26 +75,55 @@ function MobileBottomBar({ place }: { place: PlaceData }) {
   );
 }
 
+const LS_PREFIX = 'kh_place_';
+
+function lsRead(id: string): PlaceData | null {
+  try {
+    const raw = localStorage.getItem(LS_PREFIX + id);
+    return raw ? (JSON.parse(raw) as PlaceData) : null;
+  } catch { return null; }
+}
+
+function lsWrite(id: string, data: PlaceData) {
+  try {
+    localStorage.setItem(LS_PREFIX + id, JSON.stringify(data));
+  } catch { /* localStorage full */ }
+}
+
 export default function PlaceDetailClient({ id }: { id: string }) {
   const [place, setPlace] = useState<PlaceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fromCache, setFromCache] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Показываем кэш сразу — пока грузится сеть
+      const cached = lsRead(id);
+      if (cached && !cancelled) {
+        setPlace(cached);
+        setLoading(false);
+        setFromCache(true);
+      }
+
       try {
         const res = await fetch(`/api/places/${id}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const j = await res.json();
         if (!cancelled) {
-          if (j?.success && j.data) setPlace(j.data);
-          else setError(j.error ?? 'Место не найдено');
+          if (j?.success && j.data) {
+            setPlace(j.data);
+            setFromCache(false);
+            lsWrite(id, j.data); // сохраняем для следующего офлайн-визита
+          } else if (!cached) {
+            setError(j.error ?? 'Место не найдено');
+          }
           setLoading(false);
         }
-      } catch (e) {
+      } catch {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : 'Ошибка загрузки');
+          if (!cached) setError('Нет подключения. Откройте карточку онлайн заранее.');
           setLoading(false);
         }
       }
@@ -133,6 +162,14 @@ export default function PlaceDetailClient({ id }: { id: string }) {
         photoUrl={place.photoUrl}
         photoCount={place.photoCount}
       />
+
+      {/* Offline cache notice */}
+      {fromCache && (
+        <div className="w-full px-4 py-2 bg-[var(--bg-hover)] border-b border-[var(--border)] flex items-center gap-2 text-xs text-[var(--text-muted)]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--warning)] flex-shrink-0" />
+          Данные из кэша — нет подключения к сети
+        </div>
+      )}
 
       {/* 2. Realtime alert — sticky on danger */}
       {place.realtime && <PlaceRealtimeStatus realtime={place.realtime} />}
