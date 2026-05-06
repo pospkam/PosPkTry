@@ -9,7 +9,7 @@ import {
   Star, CheckCircle, Phone, ChevronLeft, ChevronRight,
   TrendingUp, Thermometer, MessageSquare,
   Fish, Plane, PawPrint, Anchor, Snowflake, Car,
-  Download, Navigation,
+  Download, Navigation, ShieldAlert,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
@@ -135,6 +135,14 @@ interface RouteDetail {
   equipment: string[] | null; kuzmichReview: string | null;
   photos: string[] | null; offers: Offer[];
   hasAiImage: boolean;
+  mchsRequired: boolean;
+  mchsPhone: string | null;
+  parkName: string | null;
+  parkApprovalUrl: string | null;
+  hazards: string[] | null;
+  distanceKm: number | null;
+  elevationGainM: number | null;
+  durationHours: number | null;
 }
 
 // ── Карточка оффера ───────────────────────────────────────────────────────────
@@ -1010,6 +1018,56 @@ export default function RouteDetailClient({ id }: { id: string }) {
             </div>
           </div>
         </div>
+
+        {/* ── Регистрация МЧС ───────────────────────────────────────────────── */}
+        {route.mchsRequired && (
+          <div className="mt-10 pt-8 border-t border-[var(--border)]">
+            <div className="rounded-xl border-2 overflow-hidden"
+              style={{ borderColor: 'var(--danger)', background: 'var(--bg-card)' }}>
+              <div className="flex items-center gap-3 px-5 py-4 border-b"
+                style={{ borderColor: 'var(--danger)', background: 'color-mix(in srgb, var(--danger) 6%, transparent)' }}>
+                <ShieldAlert className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--danger)' }} />
+                <div>
+                  <p className="font-semibold text-[var(--text-primary)]">Обязательная регистрация в МЧС</p>
+                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                    Этот маршрут требует регистрации группы до выхода
+                  </p>
+                </div>
+              </div>
+              <div className="px-5 py-4 space-y-3">
+                {route.parkName && (
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    <span className="font-medium text-[var(--text-primary)]">Природный парк:</span> {route.parkName}
+                  </p>
+                )}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {route.mchsPhone && (
+                    <a href={`tel:${route.mchsPhone.replace(/\D/g, '')}`}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all hover:shadow-sm"
+                      style={{ background: 'color-mix(in srgb, var(--danger) 10%, transparent)', color: 'var(--danger)', border: '1px solid var(--danger)' }}>
+                      <Phone className="w-4 h-4" />
+                      МЧС: {route.mchsPhone}
+                    </a>
+                  )}
+                  <a href="https://forms.mchs.gov.ru/registration_tourist_groups/form"
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all hover:shadow-sm text-white"
+                    style={{ background: 'var(--danger)' }}>
+                    <ShieldAlert className="w-4 h-4" />
+                    Зарегистрировать группу онлайн
+                  </a>
+                  {route.parkApprovalUrl && (
+                    <a href={route.parkApprovalUrl} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all hover:shadow-sm"
+                      style={{ background: 'var(--bg-hover)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>
+                      Согласование с парком
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Безопасность маршрута ─────────────────────────────────────────── */}
         <SafetyWarnings routeId={route.id} />

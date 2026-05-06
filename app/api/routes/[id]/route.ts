@@ -24,9 +24,19 @@ export async function GET(
          ark.id, ark.route_dedupe_key, ark.route_id, ark.category, ark.location_type, ark.activity_type,
          ark.title, ark.description, ark.lat, ark.lng, ark.source_url, ark.source_name, ark.payload, ark.created_at,
          ark.kuzmich_review,
-         (ari.route_id IS NOT NULL) AS has_ai_image
+         (ari.route_id IS NOT NULL) AS has_ai_image,
+         kr.mchs_registration_required,
+         kr.mchs_phone,
+         kr.park_name,
+         kr.park_approval_url,
+         kr.hazards,
+         kr.equipment     AS kr_equipment,
+         kr.distance_km,
+         kr.elevation_gain_m,
+         kr.duration_hours AS kr_duration_hours
        FROM agent_route_knowledge ark
        LEFT JOIN ai_route_images ari ON ari.route_id = ark.id
+       LEFT JOIN kamchatka_routes kr ON kr.id = ark.id
        WHERE ark.id = $1 AND ark.is_visible = TRUE`,
       [id]
     );
@@ -136,10 +146,18 @@ export async function GET(
         altitude:    payload.altitude != null ? Number(payload.altitude) : null,
         groupSizeMax: payload.group_size_max != null ? Number(payload.group_size_max) : null,
         dangerLevel: (payload.danger_level as string | null) ?? null,
-        equipment:   (payload.required_equipment as string[] | null) ?? null,
+        equipment:   (r.kr_equipment as string[] | null) ?? (payload.required_equipment as string[] | null) ?? null,
         photos:      (payload.photos as string[] | null) ?? null,
         kuzmichReview: (r.kuzmich_review as string | null) ?? null,
         hasAiImage:  Boolean(r.has_ai_image),
+        mchsRequired:    (r.mchs_registration_required as boolean | null) ?? false,
+        mchsPhone:       (r.mchs_phone as string | null) ?? null,
+        parkName:        (r.park_name as string | null) ?? null,
+        parkApprovalUrl: (r.park_approval_url as string | null) ?? null,
+        hazards:         (r.hazards as string[] | null) ?? null,
+        distanceKm:      r.distance_km != null ? Number(r.distance_km) : null,
+        elevationGainM:  r.elevation_gain_m != null ? Number(r.elevation_gain_m) : null,
+        durationHours:   r.kr_duration_hours != null ? Number(r.kr_duration_hours) : null,
         createdAt:   r.created_at as string,
         offers,
       },
