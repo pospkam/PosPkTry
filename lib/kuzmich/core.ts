@@ -9,7 +9,7 @@
  */
 
 import { pool } from '@/lib/db-pool';
-import { callAIWaterfall, callOpenRouterWithTools } from '@/lib/ai/providers';
+import { callAIWaterfall, callOpenRouterWithTools, CACHE_BREAK_MARKER } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import type { ToolDefinition, ToolCall } from '@/lib/ai/providers';
 import { knowledgeBase } from '@/lib/agents/memory/agent-knowledge';
@@ -1478,14 +1478,15 @@ export async function aiChat(opts: {
     searchPlaceKnowledge(text),
   ]);
 
-  // Строим системный промпт: туры + места по запросу + память о пользователе
+  // Строим системный промпт с маркером для prompt caching:
+  // — выше маркера: статика (KUZMICH_SYSTEM + tourContext) — кешируется (TTL 5 мин)
+  // — ниже маркера: динамика (placeCtx меняется по запросу, memCtx по юзеру) — без кеша
   const memCtx = botMemory ? buildBotMemoryContext(botMemory) : '';
-  const systemContent = [
-    KUZMICH_SYSTEM,
-    tourContext || '',
-    placeCtx || '',
-    memCtx || '',
-  ].filter(Boolean).join('\n\n');
+  const cacheable = [KUZMICH_SYSTEM, tourContext || ''].filter(Boolean).join('\n\n');
+  const dynamic = [placeCtx || '', memCtx || ''].filter(Boolean).join('\n\n');
+  const systemContent = dynamic
+    ? `${cacheable}\n\n${CACHE_BREAK_MARKER}\n\n${dynamic}`
+    : cacheable;
 
   // Если есть описание фото — прокидываем его первым сообщением
   const extraUserMsg: ChatMessage[] = visionDescription

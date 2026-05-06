@@ -133,12 +133,14 @@ async function callClaude(
         'Content-Type': 'application/json',
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31',
       },
       body: JSON.stringify({
         model: 'claude-opus-4-6',
         max_tokens: maxTokens,
         temperature,
-        system: systemPrompt,
+        // Cache the static agent persona prompt — reused across many agent calls in a round
+        system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
         messages: [{ role: 'user', content: userContent }],
       }),
     });

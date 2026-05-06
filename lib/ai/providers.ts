@@ -354,6 +354,27 @@ export async function callXai(messages: ChatMessage[]): Promise<string | null> {
 }
 
 // ── Anthropic Claude (direct API) ───────────────────────────
+
+// Marker to split a system message into cached prefix + uncached dynamic suffix.
+// Callers append "\n\n<<<CACHE_BREAK>>>\n\n" between the static (cacheable) part
+// and the dynamic (per-request) part. Without the marker, the whole system
+// message is cached as a single block (existing behavior preserved).
+export const CACHE_BREAK_MARKER = '<<<CACHE_BREAK>>>';
+
+function buildSystemBlocks(systemContent: string): Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }> {
+  const sep = `\n\n${CACHE_BREAK_MARKER}\n\n`;
+  const idx = systemContent.indexOf(sep);
+  if (idx < 0) {
+    return [{ type: 'text', text: systemContent, cache_control: { type: 'ephemeral' } }];
+  }
+  const cached = systemContent.slice(0, idx);
+  const dynamic = systemContent.slice(idx + sep.length);
+  const blocks: Array<{ type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }> = [];
+  if (cached) blocks.push({ type: 'text', text: cached, cache_control: { type: 'ephemeral' } });
+  if (dynamic) blocks.push({ type: 'text', text: dynamic });
+  return blocks;
+}
+
 export async function callAnthropic(messages: ChatMessage[]): Promise<string | null> {
   const apiKey = getAnthropicKey();
   if (!apiKey) return null;
@@ -386,13 +407,7 @@ export async function callAnthropic(messages: ChatMessage[]): Promise<string | n
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 800,
         temperature: 0.4,
-        ...(systemMsg ? {
-          system: [{
-            type: 'text',
-            text: systemMsg.content,
-            cache_control: { type: 'ephemeral' },
-          }],
-        } : {}),
+        ...(systemMsg ? { system: buildSystemBlocks(systemMsg.content) } : {}),
         messages: anthropicMessages,
       }),
       signal: AbortSignal.timeout(15_000),
