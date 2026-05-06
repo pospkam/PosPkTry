@@ -1,4 +1,5 @@
-import { AlertTriangle, Backpack, Radio, Phone, Users, ShieldAlert, Flame, Wind, Mountain, Waves, Eye, Thermometer, CloudLightning, Signal, Leaf } from 'lucide-react';
+import Link from 'next/link';
+import { AlertTriangle, Backpack, Radio, Phone, Users, ShieldAlert, Flame, Wind, Mountain, Waves, Eye, Thermometer, CloudLightning, Signal, Leaf, Heart, Book } from 'lucide-react';
 import { HAZARD_LABELS } from './types';
 import type { PlaceSafety as SafetyData } from './types';
 
@@ -33,6 +34,7 @@ export default function PlaceSafety({ safety, placeId: _ }: Props) {
     safety.satCommunicatorRequired != null ||
     safety.emergencyAccess ||
     safety.nearestMedicalKm != null ||
+    safety.altitudeM != null ||
     safety.capacityPerDay != null ||
     safety.registrationRequired;
 
@@ -107,6 +109,36 @@ export default function PlaceSafety({ safety, placeId: _ }: Props) {
             </div>
           )}
 
+          {/* Altitude + Distance to medical */}
+          {(safety.altitudeM != null || safety.nearestMedicalKm != null) && (
+            <div className="grid grid-cols-2 gap-3">
+              {safety.altitudeM != null && (
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border)]">
+                  <Mountain className="w-4 h-4 text-[var(--ocean)] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">Высота</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">{safety.altitudeM.toLocaleString('ru-RU')} м</p>
+                    {safety.altitudeM >= 2500 && (
+                      <p className="text-[10px] text-[var(--warning)] mt-0.5">Риск горной болезни</p>
+                    )}
+                  </div>
+                </div>
+              )}
+              {safety.nearestMedicalKm != null && (
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border)]">
+                  <Heart className="w-4 h-4 text-[var(--danger)] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">До медпомощи</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">{safety.nearestMedicalKm} км</p>
+                    {safety.nearestMedicalKm >= 50 && (
+                      <p className="text-[10px] text-[var(--warning)] mt-0.5">Эвакуация затруднена</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Connectivity + Registration row */}
           {(safety.satCommunicatorRequired || safety.registrationRequired) && (
             <div className="flex flex-wrap gap-3">
@@ -117,7 +149,12 @@ export default function PlaceSafety({ safety, placeId: _ }: Props) {
                 </div>
               )}
               {safety.registrationRequired && (
-                <a href="/safety/register" className="flex items-center gap-2 text-xs text-[var(--warning)] hover:underline">
+                <a
+                  href="https://forms.mchs.gov.ru/registration_tourist_groups/form"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-xs text-[var(--warning)] hover:underline"
+                >
                   <Users className="w-3.5 h-3.5" />
                   <span className="font-medium">Регистрация МЧС обязательна</span>
                 </a>
@@ -151,6 +188,21 @@ export default function PlaceSafety({ safety, placeId: _ }: Props) {
               <span className="font-medium text-[var(--text-primary)]">Эвакуация:</span> {safety.emergencyAccess}
             </p>
           )}
+
+          {/* Offline survival guide */}
+          <Link
+            href="/safety/offline"
+            className="flex items-center justify-between gap-3 p-3 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--accent)] transition-colors"
+          >
+            <div className="flex items-center gap-2.5">
+              <Book className="w-4 h-4 text-[var(--accent)] shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">Инструкции выживания</p>
+                <p className="text-[11px] text-[var(--text-muted)]">Работают офлайн — медведь, вулкан, гипотермия</p>
+              </div>
+            </div>
+            <span className="text-xs text-[var(--ocean)]">→</span>
+          </Link>
         </div>
       </div>
     </section>

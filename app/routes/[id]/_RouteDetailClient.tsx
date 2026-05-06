@@ -1072,6 +1072,27 @@ export default function RouteDetailClient({ id }: { id: string }) {
         {/* ── Безопасность маршрута ─────────────────────────────────────────── */}
         <SafetyWarnings routeId={route.id} />
 
+        {/* ── Офлайн-инструкции выживания ───────────────────────────────────── */}
+        <div className="mt-10 pt-8 border-t border-[var(--border)]">
+          <Link
+            href="/safety/offline"
+            className="flex items-center justify-between gap-3 p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--accent)] transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg flex-shrink-0" style={{ background: 'color-mix(in srgb, var(--danger) 12%, transparent)' }}>
+                <AlertTriangle className="w-4 h-4" style={{ color: 'var(--danger)' }} />
+              </div>
+              <div>
+                <p className="font-semibold text-[var(--text-primary)]">Инструкции выживания на Камчатке</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                  Медведь, вулкан, гипотермия, потерялся, сигнализация. Работает офлайн.
+                </p>
+              </div>
+            </div>
+            <span className="text-sm text-[var(--ocean)] flex-shrink-0">→</span>
+          </Link>
+        </div>
+
         {/* ── Похожие ───────────────────────────────────────────────────────── */}
         {relatedRoutes.length > 0 && (
           <div className="mt-16 pt-8 border-t border-[var(--border)]">
