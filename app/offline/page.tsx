@@ -29,12 +29,22 @@ export default function OfflinePage() {
           Откройте главную чтобы продолжить.
         </p>
 
-        <Link
-          href="/"
-          className="inline-block px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-full font-medium text-sm transition-colors"
-        >
-          На главную
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link
+            href="/safety/offline"
+            className="inline-block px-6 py-3 rounded-full font-semibold text-sm transition-colors text-white"
+            style={{ background: 'var(--danger)' }}
+          >
+            Инструкции выживания
+          </Link>
+          <Link
+            href="/"
+            className="inline-block px-6 py-3 rounded-full font-medium text-sm transition-colors"
+            style={{ background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+          >
+            На главную
+          </Link>
+        </div>
 
         <p className="text-xs text-[var(--text-muted)] mt-6">
           KamchatourHub — Камчатка в кармане
