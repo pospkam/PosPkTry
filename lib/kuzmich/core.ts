@@ -9,6 +9,7 @@
  */
 
 import { pool } from '@/lib/db-pool';
+import { transaction } from '@/lib/database';
 import { callAIWaterfall, callOpenRouterWithTools, CACHE_BREAK_MARKER } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import type { ToolDefinition, ToolCall } from '@/lib/ai/providers';
@@ -824,37 +825,93 @@ export async function findTour(keywords: string[]): Promise<TourRow | null> {
   } catch { return null; }
 }
 
+export class BookingError extends Error {
+  constructor(message: string, public readonly code: 'NO_SLOTS' | 'NOT_FOUND' | 'DB_ERROR') {
+    super(message);
+    this.name = 'BookingError';
+  }
+}
+
 export async function createBooking(
   b: Required<Omit<PendingBooking, 'step' | 'started_at'>>,
   createdVia: string,
   tgChatId?: number,
   platform?: 'tg' | 'max',
 ): Promise<number | null> {
+  const total = b.tour.base_price * b.participants;
+  const meta = (tgChatId != null)
+    ? JSON.stringify({ tg_chat_id: tgChatId, platform: platform ?? 'tg' })
+    : null;
+
+  let bookingId: number | null = null;
+
   try {
-    const total = b.tour.base_price * b.participants;
-    const meta = (tgChatId != null)
-      ? JSON.stringify({ tg_chat_id: tgChatId, platform: platform ?? 'tg' })
-      : null;
-    const { rows } = await pool.query<{ id: number }>(
-      `INSERT INTO operator_bookings
-         (operator_tour_id, tourist_name, tourist_phone,
-          participants, booking_date, booking_status,
-          base_total_price, final_price, created_via, metadata)
-       VALUES ($1,$2,$3,$4,$5,'pending_payment',$6,$6,$7,$8::jsonb)
-       RETURNING id`,
-      [b.tour.id, b.name, b.phone, b.participants, b.date, total, createdVia, meta],
-    );
-    const bookingId = rows[0]?.id ?? null;
+    bookingId = await transaction(async (client) => {
+      // Lock the tour row — serialises concurrent booking attempts.
+      const tourLockResult = await client.query<{ max_participants: number | null }>(
+        `SELECT max_participants
+         FROM operator_tours
+         WHERE id = $1 AND is_active = true AND is_published = true AND deleted_at IS NULL
+         FOR UPDATE`,
+        [b.tour.id],
+      );
+      if (tourLockResult.rows.length === 0) {
+        throw new BookingError('Тур больше недоступен. Свяжитесь с оператором.', 'NOT_FOUND');
+      }
+      const maxParticipants = tourLockResult.rows[0]!.max_participants;
 
-    // Уведомить оператора в Telegram (не блокируем ответ)
-    if (bookingId) {
-      void notifyOperatorNewBooking(bookingId, b, total);
-      // Записываем паттерн бронирования в Brain (feedback loop)
-      void recordBookingPatternInBrain(bookingId, b, total, platform);
+      // Count confirmed bookings on the requested date.
+      // The FOR UPDATE above ensures this read is consistent under concurrency.
+      if (maxParticipants != null) {
+        const slotResult = await client.query<{ already_booked: string }>(
+          `SELECT COALESCE(SUM(participants), 0) AS already_booked
+           FROM operator_bookings
+           WHERE operator_tour_id = $1
+             AND booking_date = $2
+             AND booking_status NOT IN ('cancelled', 'rejected')`,
+          [b.tour.id, b.date],
+        );
+        const alreadyBooked = parseInt(slotResult.rows[0]!.already_booked, 10);
+        if (alreadyBooked + b.participants > maxParticipants) {
+          const remaining = maxParticipants - alreadyBooked;
+          throw new BookingError(
+            remaining <= 0
+              ? 'На эту дату нет свободных мест. Выберите другую дату.'
+              : `Доступно только ${remaining} мест на эту дату, запрашивается ${b.participants}.`,
+            'NO_SLOTS',
+          );
+        }
+      }
+
+      const { rows } = await client.query<{ id: number }>(
+        `INSERT INTO operator_bookings
+           (operator_tour_id, tourist_name, tourist_phone,
+            participants, booking_date, booking_status,
+            base_total_price, final_price, created_via, metadata)
+         VALUES ($1,$2,$3,$4,$5,'pending_payment',$6,$6,$7,$8::jsonb)
+         RETURNING id`,
+        [b.tour.id, b.name, b.phone, b.participants, b.date, total, createdVia, meta],
+      );
+      return rows[0]?.id ?? null;
+    });
+  } catch (err) {
+    // Surface diagnostic info to logs — silent failure made debugging impossible
+    if (err instanceof BookingError) {
+      console.warn(`[kuzmich:createBooking] ${err.code}: ${err.message} (tour=${b.tour.id} date=${b.date} participants=${b.participants})`);
+      throw err; // bubble up — caller renders the message to user
     }
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[kuzmich:createBooking] DB error:', msg, { tourId: b.tour.id, date: b.date });
+    return null;
+  }
 
-    return bookingId;
-  } catch { return null; }
+  // Fire-and-forget side effects — outside transaction by design (failure must not affect booking)
+  if (bookingId) {
+    void notifyOperatorNewBooking(bookingId, b, total);
+    void recordBookingPatternInBrain(bookingId, b, total, platform);
+  }
+
+  return bookingId;
 }
 
 async function recordBookingPatternInBrain(
@@ -1173,12 +1230,23 @@ export async function handleBookingStep(
       return true;
     }
 
-    const bookingId = await createBooking(
-      b as Required<Omit<PendingBooking, 'step' | 'started_at'>>,
-      createdVia,
-      chatId,
-      createdVia.includes('max') ? 'max' : 'tg',
-    );
+    let bookingId: number | null = null;
+    try {
+      bookingId = await createBooking(
+        b as Required<Omit<PendingBooking, 'step' | 'started_at'>>,
+        createdVia,
+        chatId,
+        createdVia.includes('max') ? 'max' : 'tg',
+      );
+    } catch (err) {
+      // Capacity conflict or tour gone — surface specific reason to user
+      if (err instanceof BookingError) {
+        await deleteBookingFlow(chatId, mode, pending);
+        await reply(chatId, err.message);
+        return true;
+      }
+      throw err;
+    }
     await deleteBookingFlow(chatId, mode, pending);
 
     if (!bookingId) {
