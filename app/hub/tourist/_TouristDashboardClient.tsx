@@ -227,8 +227,8 @@ export default function TouristDashboardClient() {
           <div className="px-5 py-12 text-center">
             <Calendar className="w-8 h-8 text-[var(--text-muted)] mx-auto mb-3" />
             <p className="text-sm text-[var(--text-muted)] mb-2">Бронирований пока нет</p>
-            <Link href="/hub/tourist/bookings/new" className="text-sm text-[var(--accent)] hover:underline font-medium">
-              Забронировать тур
+            <Link href="/marketplace" className="text-sm text-[var(--accent)] hover:underline font-medium">
+              Найти тур
             </Link>
           </div>
         ) : (
