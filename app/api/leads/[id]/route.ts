@@ -72,8 +72,9 @@ export async function GET(
   const { id } = await params;
 
   const res = await pool.query(
-    `SELECT id, name, phone, comment, route_id, route_title, source_url, source_data,
-            status, notes, created_at, updated_at
+    `SELECT id, name, phone, email, comment, route_id, route_title, source_url, source_data,
+            status, notes, proposal_id, ai_score, ai_summary, group_size, budget_rub, desired_dates,
+            created_at, updated_at
      FROM leads WHERE id = $1`,
     [id]
   );

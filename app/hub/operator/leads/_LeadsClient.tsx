@@ -98,7 +98,7 @@ function LeadRow({ lead, onProcess, processing }: LeadRowProps) {
   const hasProposal = !!lead.proposal_id;
 
   return (
-    <div className="ds-card p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:bg-[var(--bg-hover)] transition-colors">
+    <a href={`/hub/operator/leads/${lead.id}`} className="ds-card p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:bg-[var(--bg-hover)] transition-colors block">
       {/* Основные данные */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -139,7 +139,7 @@ function LeadRow({ lead, onProcess, processing }: LeadRowProps) {
       </div>
 
       {/* Действия */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 shrink-0" onClick={e => e.preventDefault()}>
         {hasProposal && (
           <a
             href={`/api/leads/${lead.id}/proposal/pdf`}
@@ -179,7 +179,7 @@ function LeadRow({ lead, onProcess, processing }: LeadRowProps) {
           </span>
         ) : null}
       </div>
-    </div>
+    </a>
   );
 }
 
