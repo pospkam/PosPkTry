@@ -1,0 +1,39 @@
+name: Cron — Smart Notify (tour-preference matching)
+
+# Runs every 6 hours:
+# Matches new/updated tours with users' preferred activities in user_ai_memory.
+# Sends Telegram/Email notification if match found.
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # каждые 6 часов
+  workflow_dispatch:        # manual trigger
+
+jobs:
+  smart-notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Smart notify — match tours to user preferences
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET not set — skipping"
+            exit 0
+          fi
+
+          HTTP=$(curl -s -o /tmp/notify_resp.json -w "%{http_code}" \
+            --max-time 120 \
+            -X POST \
+            "https://tourhab.ru/api/cron/smart-notify?secret=$CRON_SECRET")
+
+          echo "HTTP: $HTTP"
+          cat /tmp/notify_resp.json 2>/dev/null || true
+
+          if [ "$HTTP" = "200" ]; then
+            echo "Smart notify OK"
+          else
+            echo "Unexpected HTTP $HTTP"
+            exit 1
+          fi
