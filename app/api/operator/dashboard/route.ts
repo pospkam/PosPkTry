@@ -74,6 +74,20 @@ export async function GET(request: NextRequest) {
       FROM tour_stats ts, booking_stats bs
     `, [partnerId, startDate]);
 
+    // Leads stats for this operator
+    const leadsResult = await query<{
+      new_today: string; new_week: string; unprocessed: string;
+    }>(
+      `SELECT
+         COUNT(*) FILTER (WHERE l.created_at >= CURRENT_DATE)                        AS new_today,
+         COUNT(*) FILTER (WHERE l.created_at >= CURRENT_DATE - INTERVAL '7 days')   AS new_week,
+         COUNT(*) FILTER (WHERE l.status = 'new')                                   AS unprocessed
+       FROM leads l
+       WHERE l.operator_id = $1`,
+      [partnerId]
+    );
+    const lr = leadsResult.rows[0];
+
     const row = metricsResult.rows[0];
     const metrics: OperatorMetrics = {
       totalTours:        parseInt(String(row?.total_tours))        || 0,
@@ -87,6 +101,9 @@ export async function GET(request: NextRequest) {
       monthlyRevenue:    parseFloat(String(row?.monthly_revenue))  || 0,
       averageRating:     parseFloat(String(row?.avg_rating))       || 0,
       totalReviews:      parseInt(String(row?.total_reviews))      || 0,
+      newLeadsToday:     parseInt(String(lr?.new_today))           || 0,
+      newLeadsWeek:      parseInt(String(lr?.new_week))            || 0,
+      unprocessedLeads:  parseInt(String(lr?.unprocessed))         || 0,
     };
 
     // 2. ПОСЛЕДНИЕ БРОНИРОВАНИЯ
