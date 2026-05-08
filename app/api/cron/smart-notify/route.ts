@@ -118,6 +118,9 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// Workflow calls with POST; support both methods
+export const POST = GET;
+
 function escHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

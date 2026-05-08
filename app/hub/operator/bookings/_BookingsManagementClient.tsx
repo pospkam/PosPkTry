@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import {
   Plus, X, Check, AlertTriangle, Phone, Mail,
-  RefreshCw, ChevronLeft, ChevronRight, Users,
+  RefreshCw, ChevronLeft, ChevronRight, Users, ExternalLink,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -486,6 +487,14 @@ export default function BookingsManagementClient() {
                 По этому туру был погодный алерт. Требуется проверка.
               </div>
             )}
+
+            {/* Link to full booking page */}
+            <Link
+              href={`/hub/operator/bookings/${detail.id}`}
+              className="flex items-center gap-1.5 text-xs text-[var(--ocean)] hover:underline"
+            >
+              <ExternalLink className="w-3.5 h-3.5" /> Открыть полную страницу
+            </Link>
 
             {/* Quick status actions in detail */}
             <div className="flex gap-2 flex-wrap pt-1 border-t border-[var(--border)]">
