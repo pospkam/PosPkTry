@@ -8,6 +8,7 @@ import { requireOperator } from '@/lib/auth/middleware';
 import { query } from '@/lib/database';
 import { z } from 'zod';
 import { loyaltySystem } from '@/lib/loyalty/loyalty-system';
+import { emailService } from '@/lib/notifications/email-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,26 +105,47 @@ export async function PATCH(
     const result = await query(
       `UPDATE operator_bookings SET ${sets.join(', ')}
        WHERE id = $${idx}
-       RETURNING id, booking_status, updated_at, tourist_email, final_price`,
+       RETURNING id, booking_status, updated_at, tourist_email, tourist_name, final_price,
+                 (SELECT title FROM operator_tours WHERE id = operator_tour_id) AS tour_title`,
       values
     );
 
+    const row = result.rows[0] as {
+      tourist_email?: string; tourist_name?: string;
+      final_price?: string; tour_title?: string; booking_status?: string;
+    } | undefined;
+
+    // Notify tourist by email when status changes to confirmed or cancelled
+    if (row?.tourist_email && input.booking_status && ['confirmed', 'cancelled'].includes(input.booking_status)) {
+      const isConfirmed = input.booking_status === 'confirmed';
+      const subject = isConfirmed
+        ? `Бронирование подтверждено: ${row.tour_title ?? 'тур'}`
+        : `Бронирование отменено: ${row.tour_title ?? 'тур'}`;
+      const html = isConfirmed
+        ? `<h2>Ваше бронирование подтверждено!</h2>
+           <p><strong>Тур:</strong> ${row.tour_title ?? ''}</p>
+           <p><strong>Стоимость:</strong> ${parseFloat(row.final_price ?? '0').toLocaleString('ru-RU')} ₽</p>
+           <p>Оператор свяжется с вами для уточнения деталей.</p>`
+        : `<h2>Бронирование отменено</h2>
+           <p><strong>Тур:</strong> ${row.tour_title ?? ''}</p>
+           ${input.cancellation_reason ? `<p><strong>Причина:</strong> ${input.cancellation_reason}</p>` : ''}
+           <p>Свяжитесь с оператором или выберите другой тур на <a href="https://tourhab.ru/marketplace">tourhab.ru</a>.</p>`;
+      emailService.sendEmail({ to: row.tourist_email, subject, html }).catch(() => {});
+    }
+
     // Earn loyalty points when booking is completed
-    if (input.booking_status === 'completed' && result.rows[0]) {
-      const row = result.rows[0] as { tourist_email?: string; final_price?: string };
-      if (row.tourist_email && row.final_price) {
-        const userResult = await query<{ id: string }>(
-          'SELECT id FROM users WHERE email = $1',
-          [row.tourist_email]
-        );
-        if (userResult.rows[0]) {
-          const uid = userResult.rows[0].id;
-          const price = parseFloat(row.final_price);
-          await query('UPDATE users SET total_spent = COALESCE(total_spent, 0) + $1 WHERE id = $2', [price, uid]);
-          loyaltySystem.earnPoints(uid, params.id, price, 'booking').catch(() => {});
-          loyaltySystem.earnActivityPoints(uid, 'first_booking', params.id).catch(() => {});
-          loyaltySystem.completeReferral(uid).catch(() => {});
-        }
+    if (input.booking_status === 'completed' && row?.tourist_email && row.final_price) {
+      const userResult = await query<{ id: string }>(
+        'SELECT id FROM users WHERE email = $1',
+        [row.tourist_email]
+      );
+      if (userResult.rows[0]) {
+        const uid = userResult.rows[0].id;
+        const price = parseFloat(row.final_price);
+        await query('UPDATE users SET total_spent = COALESCE(total_spent, 0) + $1 WHERE id = $2', [price, uid]);
+        loyaltySystem.earnPoints(uid, params.id, price, 'booking').catch(() => {});
+        loyaltySystem.earnActivityPoints(uid, 'first_booking', params.id).catch(() => {});
+        loyaltySystem.completeReferral(uid).catch(() => {});
       }
     }
 
