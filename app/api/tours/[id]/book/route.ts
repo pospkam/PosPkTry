@@ -186,7 +186,7 @@ export async function POST(
         'Content-Type': 'application/json',
         ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       };
-      const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/payments/create`, {
+      const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001'}/api/payments/create`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
