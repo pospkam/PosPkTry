@@ -8,7 +8,15 @@ const proxy = http.createServer((req, res) => {
     res.end(JSON.stringify({ status: 'ok' }));
     return;
   }
-  const p = http.request({ hostname:'127.0.0.1', port:3001, path:req.url, method:req.method, headers:req.headers },
+  // Preserve the real public host so Next.js builds correct absolute URLs in redirects.
+  // Without these headers Next.js falls back to 127.0.0.1:3001 (internal bind address).
+  const forwardedHeaders = {
+    ...req.headers,
+    'x-forwarded-host':  req.headers['x-forwarded-host']  || req.headers['host'] || '',
+    'x-forwarded-proto': req.headers['x-forwarded-proto'] || 'https',
+    'x-forwarded-for':   req.headers['x-forwarded-for']   || req.socket.remoteAddress || '127.0.0.1',
+  };
+  const p = http.request({ hostname:'127.0.0.1', port:3001, path:req.url, method:req.method, headers:forwardedHeaders },
     r => { res.writeHead(r.statusCode, r.headers); r.pipe(res); });
   p.on('error', () => { res.writeHead(503); res.end('starting'); });
   req.pipe(p);
