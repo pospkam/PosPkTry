@@ -15,6 +15,9 @@ export interface OperatorMetrics {
   monthlyRevenue: number;
   averageRating: number;
   totalReviews: number;
+  newLeadsToday: number;
+  newLeadsWeek: number;
+  unprocessedLeads: number;
 }
 
 // Статистика по турам

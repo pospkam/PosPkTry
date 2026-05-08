@@ -2,15 +2,16 @@
 
 import React from 'react';
 import { OperatorMetrics } from '@/types/operator';
-import { 
-  Mountain, 
-  CalendarCheck, 
-  Clock, 
-  CheckCircle, 
-  Wallet, 
-  TrendingUp, 
-  Star, 
+import {
+  Mountain,
+  CalendarCheck,
+  Clock,
+  CheckCircle,
+  Wallet,
+  TrendingUp,
+  Star,
   MessageSquare,
+  Zap,
   LucideIcon
 } from 'lucide-react';
 
@@ -161,6 +162,24 @@ export function OperatorMetricsGrid({ metrics, loading = false }: OperatorMetric
         icon={MessageSquare}
         iconColor="text-purple-400"
         bgColor="bg-purple-500/10"
+      />
+
+      <MetricCard
+        title="Новых лидов сегодня"
+        value={metrics.newLeadsToday ?? 0}
+        icon={Zap}
+        iconColor="text-[var(--ocean)]"
+        bgColor="bg-[var(--ocean)]/10"
+        trend={(metrics.newLeadsToday ?? 0) > 0 ? 'up' : 'neutral'}
+      />
+
+      <MetricCard
+        title="Необработанных лидов"
+        value={metrics.unprocessedLeads ?? 0}
+        icon={Clock}
+        iconColor={(metrics.unprocessedLeads ?? 0) > 0 ? 'text-[var(--warning)]' : 'text-[var(--text-muted)]'}
+        bgColor={(metrics.unprocessedLeads ?? 0) > 0 ? 'bg-[var(--warning)]/10' : 'bg-[var(--bg-hover)]'}
+        trend={(metrics.unprocessedLeads ?? 0) > 3 ? 'up' : 'neutral'}
       />
     </div>
   );
