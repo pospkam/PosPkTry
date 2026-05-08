@@ -137,6 +137,7 @@ interface Props {
 export default function LeadDetailClient({ leadId }: Props) {
   const [processingAI, setProcessingAI] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [sendingProposal, setSendingProposal] = useState(false);
   const [notes, setNotes] = useState('');
   const [notesEditing, setNotesEditing] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -195,6 +196,25 @@ export default function LeadDetailClient({ leadId }: Props) {
       showNotification('error', err instanceof Error ? err.message : 'Ошибка');
     } finally {
       setUpdatingStatus(false);
+    }
+  }, [leadId, mutateLead]);
+
+  const handleSendProposal = useCallback(async () => {
+    setSendingProposal(true);
+    try {
+      const res = await fetch(`/api/leads/${leadId}/proposal/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channel: 'both' }),
+      });
+      const json = await res.json() as { success?: boolean; error?: string; message?: string };
+      if (!res.ok) throw new Error(json.error ?? 'Ошибка отправки');
+      showNotification('success', json.message ?? 'Предложение отправлено клиенту');
+      mutateLead();
+    } catch (err) {
+      showNotification('error', err instanceof Error ? err.message : 'Ошибка');
+    } finally {
+      setSendingProposal(false);
     }
   }, [leadId, mutateLead]);
 
@@ -351,16 +371,32 @@ export default function LeadDetailClient({ leadId }: Props) {
                 <Brain className="w-5 h-5 text-[var(--accent)]" />
                 AI-предложение
               </h2>
-              <a
-                href={`/api/leads/${leadId}/proposal/pdf`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ds-btn text-xs gap-1.5"
-                aria-label="Скачать PDF"
-              >
-                <Download className="w-3.5 h-3.5" />
-                PDF
-              </a>
+              <div className="flex items-center gap-2">
+                {lead?.status !== 'proposal_sent' && lead?.status !== 'converted' && (
+                  <button
+                    onClick={handleSendProposal}
+                    disabled={sendingProposal}
+                    className="ds-btn-primary text-xs gap-1.5"
+                    aria-label="Отправить клиенту"
+                  >
+                    {sendingProposal ? (
+                      <><RefreshCw className="w-3.5 h-3.5 animate-spin" />Отправляю...</>
+                    ) : (
+                      <><Send className="w-3.5 h-3.5" />Отправить клиенту</>
+                    )}
+                  </button>
+                )}
+                <a
+                  href={`/api/leads/${leadId}/proposal/pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ds-btn text-xs gap-1.5"
+                  aria-label="Скачать PDF"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  PDF
+                </a>
+              </div>
             </div>
 
             {/* Заголовок и скор */}
