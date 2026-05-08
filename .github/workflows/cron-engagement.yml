@@ -1,6 +1,8 @@
 name: Cron — Engagement
 
 on:
+  schedule:
+    - cron: '0 9 * * *'    # каждый день в 09:00 UTC: реэнгейджмент туристов
   workflow_dispatch:
 
 jobs:

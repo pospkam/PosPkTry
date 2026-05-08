@@ -1,0 +1,37 @@
+name: Cron — Tour Reminder (24h before)
+
+# Runs daily at 06:00 UTC (18:00 Kamchatka time):
+# Sends Telegram reminder to tourists who have a tour tomorrow.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'    # 06:00 UTC = 18:00 KMT (Камчатское время)
+  workflow_dispatch:        # manual trigger
+
+jobs:
+  tour-reminder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Send 24h tour reminders
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET not set — skipping"
+            exit 0
+          fi
+
+          HTTP=$(curl -s -o /tmp/reminder_resp.json -w "%{http_code}" \
+            --max-time 120 \
+            "https://tourhab.ru/api/cron/tour-reminder?secret=$CRON_SECRET")
+
+          echo "HTTP: $HTTP"
+          cat /tmp/reminder_resp.json 2>/dev/null || true
+
+          if [ "$HTTP" = "200" ]; then
+            echo "Tour reminders sent OK"
+          else
+            echo "Unexpected HTTP $HTTP"
+            exit 1
+          fi

@@ -1,6 +1,8 @@
 name: Cron — Watchdog
 
 on:
+  schedule:
+    - cron: '*/30 * * * *'  # каждые 30 минут
   workflow_dispatch:
 
 jobs:
