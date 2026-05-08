@@ -26,9 +26,18 @@ export async function GET(request: NextRequest) {
     return userOrResponse;
   }
 
-  const operatorId = userOrResponse.userId;
+  const userId = userOrResponse.userId;
 
   try {
+    const partnerRes = await pool.query<{ id: string }>(
+      `SELECT id FROM partners WHERE user_id = $1 LIMIT 1`,
+      [userId]
+    );
+    const partnerId = partnerRes.rows[0]?.id;
+    if (!partnerId) {
+      return NextResponse.json({ success: true, data: [] });
+    }
+
     const { rows: tours } = await pool.query<any>(
       `SELECT
          id, title, description, short_description,
@@ -42,7 +51,7 @@ export async function GET(request: NextRequest) {
        FROM operator_tours
        WHERE operator_id = $1 AND deleted_at IS NULL
        ORDER BY created_at DESC`,
-      [operatorId]
+      [partnerId]
     );
 
     const completions: TourCompletion[] = tours.map(tour => {
