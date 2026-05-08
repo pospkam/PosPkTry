@@ -55,8 +55,9 @@ async function checkUnconfirmedBookings(): Promise<WatchdogAlert | null> {
         COUNT(*)::text          AS count,
         MAX(EXTRACT(EPOCH FROM (NOW() - created_at))/3600)::text AS oldest_hours
       FROM operator_bookings
-      WHERE booking_status = 'pending'
+      WHERE booking_status = 'new'
         AND created_at < NOW() - INTERVAL '24 hours'
+        AND deleted_at IS NULL
     `);
     const count = parseInt(rows[0]?.count ?? '0', 10);
     if (count === 0) return null;
@@ -107,17 +108,19 @@ async function checkOperatorNoResponse(): Promise<WatchdogAlert | null> {
       count: string;
       oldest: string;
     }>(
-      `SELECT ob.operator_id::text,
+      `SELECT ot.operator_id::text,
               p.slug AS partner_slug,
               COALESCE(p.company_name, p.name) AS partner_name,
               p.telegram_chat_id,
               COUNT(*)::text AS count,
               MIN(ob.created_at)::date::text AS oldest
        FROM operator_bookings ob
-       LEFT JOIN partners p ON p.user_id = ob.operator_id
-       WHERE ob.booking_status = 'pending'
+       JOIN operator_tours ot ON ot.id = ob.operator_tour_id
+       LEFT JOIN partners p ON p.id = ot.operator_id
+       WHERE ob.booking_status = 'new'
          AND ob.created_at < NOW() - INTERVAL '48 hours'
-       GROUP BY ob.operator_id, p.slug, p.company_name, p.name, p.telegram_chat_id`,
+         AND ob.deleted_at IS NULL
+       GROUP BY ot.operator_id, p.slug, p.company_name, p.name, p.telegram_chat_id`,
     );
     if (rows.length === 0) return null;
 
