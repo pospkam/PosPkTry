@@ -5,6 +5,8 @@ name: Cron — Scout-Innovator (daily)
 # 2. /api/cron/scout       — синтезирует → эволюционные предложения
 
 on:
+  schedule:
+    - cron: '0 6 * * *'    # каждый день в 06:00 UTC: сбор сигналов и синтез
   workflow_dispatch:        # ручной запуск из GitHub Actions UI
 
 jobs:
