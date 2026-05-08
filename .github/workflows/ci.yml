@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -20,10 +24,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 24
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
