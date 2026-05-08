@@ -17,7 +17,7 @@ const envSchema = z.object({
     .enum(['development', 'production', 'test'])
     .default('development'),
   PORT: z.string().optional().default('3000'),
-  NEXT_PUBLIC_APP_URL: z.string().optional().default('http://localhost:3000'),
+  NEXT_PUBLIC_APP_URL: z.string().optional().default('https://tourhab.ru'),
   NEXT_PUBLIC_API_URL: z.string().optional().default(''),
 
   // ── Database (PostgreSQL) ─────────────────────────────────────────
