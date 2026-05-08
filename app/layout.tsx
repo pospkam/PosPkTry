@@ -128,6 +128,7 @@ import MicrosoftClarity from '@/components/shared/MicrosoftClarity'
 import StickyLeadButton from '@/components/shared/StickyLeadButton'
 import KuzmichWidget from '@/components/kuzmich/KuzmichWidget'
 import { InstallPrompt } from '@/components/PWA/InstallPrompt'
+import { ServiceWorkerRegistrar } from '@/components/PWA/ServiceWorkerRegistrar'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -267,6 +268,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <StickyLeadButton />
         <KuzmichWidget />
         <InstallPrompt />
+        <ServiceWorkerRegistrar />
       </body>
     </html>
   )
