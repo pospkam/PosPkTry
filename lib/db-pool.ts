@@ -55,5 +55,5 @@ export const pool = {
   connect: (...args: unknown[]) => getPool().connect(...args as [any]),
   query: (...args: unknown[]) => getPool().query(...args as [string, unknown[]?]),
   end: () => _pool?.end(),
-  on: (...args: unknown[]) => getPool().on(...args as [string, (...args: unknown[]) => void]),
+  on: (...args: unknown[]) => getPool().on(...args as ['error' | 'connect' | 'acquire' | 'remove' | 'release', (...args: unknown[]) => void]),
 } as unknown as Pool;

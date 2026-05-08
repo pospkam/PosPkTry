@@ -826,7 +826,7 @@ async function gatherTravelAIExtra(): Promise<RawSignal[]> {
 
     const fcResults = await Promise.allSettled(
       fcUrls.map(async ({ url, source }) => {
-        const page = await firecrawlScrape(url, { formats: ['markdown'], onlyMainContent: true });
+        const page = await firecrawlScrape(url);
         if (!page?.markdown) return [] as RawSignal[];
 
         // Extract top headlines/links from the page

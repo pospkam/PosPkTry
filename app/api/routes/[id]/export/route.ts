@@ -23,7 +23,12 @@ export async function GET(
 
   try {
     // Prefer kamchatka_routes (has geometry column); fall back to agent_route_knowledge view
-    const result = await query(
+    const result = await query<{
+      id: string; title: string; description: string;
+      lat: string; lng: string; location_type: string;
+      activity_type: string; category: string;
+      payload: Record<string, unknown>; geometry: { type?: string; coordinates?: number[][] } | null;
+    }>(
       `SELECT
          COALESCE(kr.id::text, ark.id::text) AS id,
          COALESCE(kr.title, ark.title) AS title,

@@ -32,7 +32,7 @@ const RegistrationSchema = z.object({
   }),
 });
 
-function generateRegistrationPDF(data: z.infer<typeof RegistrationSchema>): Buffer {
+function generateRegistrationPDF(data: z.infer<typeof RegistrationSchema>): Promise<Buffer> {
   return new Promise((resolve) => {
     const doc = new PDFDocument({
       size: 'A4',
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
     request.nextUrl.searchParams.has('pdf');
 
   if (wantPdf) {
-    const pdfBuffer = generateRegistrationPDF(data);
+    const pdfBuffer = await generateRegistrationPDF(data);
     return new NextResponse(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',

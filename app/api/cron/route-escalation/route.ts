@@ -24,8 +24,16 @@ export async function GET(request: NextRequest) {
   const today = now.toISOString().split('T')[0];
   const currentHour = now.getUTCHours();
 
+  interface EscalationRoute {
+    id: string; user_id: string; route_name: string;
+    leader_name: string; leader_phone: string; leader_email: string;
+    emergency_contact_name: string; emergency_contact_phone: string;
+    emergency_contact_relation: string; emergency_contact_telegram_chat_id: string;
+    emergency_contact_email: string; emergency_contact_consent: boolean;
+    start_date: string; end_date: string; completed_at: string | null; reminder_sent: boolean;
+  }
   // Находим все активные маршруты (не completed, end_date <= сегодня)
-  const activeRoutes = await query(
+  const activeRoutes = await query<EscalationRoute>(
     `SELECT id, user_id, route_name, leader_name, leader_phone, leader_email,
             emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
             emergency_contact_telegram_chat_id, emergency_contact_email,

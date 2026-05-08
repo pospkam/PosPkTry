@@ -68,6 +68,10 @@ export async function POST(req: NextRequest) {
       bookingId,
     });
 
+    if (!qr) {
+      return NextResponse.json({ error: 'Не удалось создать QR-код оплаты' }, { status: 502 });
+    }
+
     // Сохраняем qrId в брони для webhook-сопоставления
     await pool.query(
       `UPDATE operator_bookings

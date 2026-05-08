@@ -2,10 +2,9 @@
 
 import dynamic from 'next/dynamic';
 import { Download, Navigation, MapPin, FileDown } from 'lucide-react';
+import { MarkerType } from '@/components/shared/LeafletMap';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
-
-const MARKER_TYPE = { TOUR: 'tour' as const };
 
 interface Props {
   placeId: string;
@@ -44,7 +43,7 @@ export default function PlaceAccess({ placeId, name, lat, lng, accessInfo, nearb
               title: name,
               description: 'Текущее место',
               color: 'red',
-              type: MARKER_TYPE.TOUR,
+              type: MarkerType.TOUR,
               category: 'place',
             },
             ...nearbyMarkers.map(n => ({
@@ -52,7 +51,7 @@ export default function PlaceAccess({ placeId, name, lat, lng, accessInfo, nearb
               title: n.name,
               description: n.locationType ?? '',
               color: 'blue' as const,
-              type: MARKER_TYPE.TOUR,
+              type: MarkerType.TOUR,
               category: n.locationType ?? 'other',
             })),
           ]}

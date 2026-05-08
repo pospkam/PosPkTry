@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/types';
 import { verifyAuth } from '@/lib/auth';
 import { listBookings } from '@/lib/bookings/booking.service';
+import { query } from '@/lib/database';
 import type { BookingWithDetails } from '@/types/booking.types';
 
 // GET /api/bookings — Получение бронирований с ролевой фильтрацией

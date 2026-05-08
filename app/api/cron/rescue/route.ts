@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     void logAgentRun({
       agent_id: 'rescue',
-      status: result.alerts.some(a => a.severity === 'critical') ? 'warning' : 'success',
+      status: result.alerts.some(a => a.severity === 'critical') ? 'partial' : 'success',
       started_at: startedAt,
       duration_ms: Date.now() - startedAt.getTime(),
       metadata: result as unknown as Record<string, unknown>,

@@ -9,7 +9,7 @@ import {
   Star, CheckCircle, Phone, ChevronLeft, ChevronRight,
   TrendingUp, Thermometer, MessageSquare,
   Fish, Plane, PawPrint, Anchor, Snowflake, Car,
-  Download, Navigation, ShieldAlert,
+  Download, Navigation, ShieldAlert, ExternalLink,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
