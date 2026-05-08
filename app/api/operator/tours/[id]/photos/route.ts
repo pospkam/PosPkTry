@@ -44,7 +44,7 @@ async function getStrictOperatorId(request: NextRequest): Promise<string | NextR
 
 async function ensureTourOwnership(tourId: string, operatorId: string): Promise<boolean> {
   const result = await query(
-    `SELECT id FROM tours WHERE id = $1 AND operator_id = $2`,
+    `SELECT id FROM operator_tours WHERE id = $1 AND operator_id = $2 AND deleted_at IS NULL`,
     [tourId, operatorId]
   );
   return result.rows.length > 0;
@@ -183,7 +183,7 @@ export async function POST(
 
     // Get created asset
     const result = await query(
-      'SELECT * FROM assets WHERE id = $1',
+      'SELECT id, url, mime_type, size, width, height, alt, created_at FROM assets WHERE id = $1',
       [assetId]
     );
 
