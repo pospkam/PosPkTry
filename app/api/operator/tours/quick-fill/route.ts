@@ -15,9 +15,18 @@ export async function PATCH(request: NextRequest) {
     return userOrResponse;
   }
 
-  const operatorId = userOrResponse.userId;
+  const userId = userOrResponse.userId;
 
   try {
+    const partnerRes = await pool.query<{ id: string }>(
+      `SELECT id FROM partners WHERE user_id = $1 LIMIT 1`,
+      [userId]
+    );
+    const operatorId = partnerRes.rows[0]?.id;
+    if (!operatorId) {
+      return NextResponse.json({ error: 'Operator not found' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { tourId, field, value } = body;
 
