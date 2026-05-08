@@ -50,7 +50,7 @@ export async function GET(
      FROM operator_bookings b
      JOIN operator_tours   t ON t.id = COALESCE(b.operator_tour_id, b.tour_id)
      LEFT JOIN partners    p ON p.id = t.operator_id
-     LEFT JOIN users       u ON u.id = t.operator_id
+     LEFT JOIN users       u ON u.id = p.user_id
      WHERE b.id = $1`,
     [id]
   );
