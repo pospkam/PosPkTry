@@ -462,7 +462,7 @@ export default function KuzmichClient() {
       {/* Личность Кузьмича */}
       {!hasMessages && (
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--accent)]/10 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-[var(--accent)]/10 mb-4">
             <Bot className="w-8 h-8 text-[var(--accent)]" />
           </div>
           <div className="inline-flex items-center gap-2 bg-[var(--success)]/10 rounded-full px-3 py-1 mb-3">

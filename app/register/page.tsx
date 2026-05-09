@@ -151,7 +151,7 @@ export default function RegisterRoutePage() {
 
           <div className="space-y-3 mb-6 text-left">
             <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-              <p className="font-semibold text-sm mb-1">📱 Через Госуслуги</p>
+              <p className="font-semibold text-sm mb-1">Через Госуслуги</p>
               <p className="text-xs text-white/50">Подайте электронное заявление на gosuslugi.ru</p>
               <a href="https://www.gosuslugi.ru" target="_blank" rel="noopener noreferrer"
                  className="text-[var(--accent)] text-xs font-medium mt-2 inline-block hover:underline">
@@ -159,11 +159,11 @@ export default function RegisterRoutePage() {
               </a>
             </div>
             <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-              <p className="font-semibold text-sm mb-1">📞 По телефону МЧС</p>
+              <p className="font-semibold text-sm mb-1">По телефону МЧС</p>
               <p className="text-xs text-white/50">+7 (4152) 23-53-62 — Главное управление МЧС по Камчатскому краю</p>
             </div>
             <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-              <p className="font-semibold text-sm mb-1">🏢 Лично</p>
+              <p className="font-semibold text-sm mb-1">Лично</p>
               <p className="text-xs text-white/50">г. Петропавловск-Камчатский, ул. Ленинская, 28</p>
             </div>
           </div>
@@ -182,7 +182,7 @@ export default function RegisterRoutePage() {
   return (
     <div className="min-h-[100dvh] bg-[#0a0a0a] text-white">
       {/* Шапка */}
-      <div className="sticky top-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-lg border-b border-white/10">
+      <div className="sticky top-0 z-50 bg-[#0a0a0a]/90 border-b border-white/10">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
           <button onClick={() => step > 1 ? setStep((step - 1) as Step) : router.back()}
                   className="p-1 rounded-lg hover:bg-white/10">

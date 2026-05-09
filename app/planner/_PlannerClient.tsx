@@ -1134,6 +1134,8 @@ export function PlannerClient({ initialUserId }: { initialUserId?: string | null
       }
       setBgRoutes(deduped);
       setBgLoading(false);
+    }).catch(() => {
+      if (!cancelled) setBgLoading(false);
     });
 
     return () => { cancelled = true; };

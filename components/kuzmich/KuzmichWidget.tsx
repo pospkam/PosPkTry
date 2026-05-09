@@ -320,7 +320,7 @@ export default function KuzmichWidget() {
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-0 right-0 z-50 w-full h-[92dvh] sm:bottom-24 sm:right-6 sm:w-80 sm:h-[500px] bg-[var(--bg-card)] border border-[var(--border)] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-3">
+        <div className="fixed bottom-0 right-0 z-50 w-full h-[92dvh] sm:bottom-24 sm:right-6 sm:w-80 sm:h-[500px] bg-[var(--bg-card)] border border-[var(--border)] rounded-t-2xl sm:rounded-lg shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-3">
 
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-hover)]">

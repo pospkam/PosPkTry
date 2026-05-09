@@ -174,7 +174,7 @@ export function HomeMapPreview() {
           <button
             key={t.value}
             onClick={() => setKind(t.value)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all backdrop-blur-md ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               kind === t.value
                 ? 'bg-[var(--accent)] text-white shadow-lg'
                 : 'bg-[var(--bg-card)]/80 text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border)]/50'
@@ -194,7 +194,7 @@ export function HomeMapPreview() {
 
       {/* Filter chips — overlay bottom — inline zIndex чтобы перебить Leaflet tile pane (z-400 !important) */}
       <div className="absolute bottom-3 left-3 right-3" style={{ zIndex: 9999 }}>
-        <div className="rounded-xl bg-[var(--bg-card)]/90 backdrop-blur-md border border-[var(--border)]/50 shadow-xl px-3 py-2">
+        <div className="rounded-xl bg-[var(--bg-card)]/90 border border-[var(--border)]/50 shadow-xl px-3 py-2">
           <div className="flex items-center gap-2 overflow-x-auto">
             <Filter className="w-3.5 h-3.5 text-[var(--text-muted)] flex-shrink-0" />
             {currentOptions.map(f => (

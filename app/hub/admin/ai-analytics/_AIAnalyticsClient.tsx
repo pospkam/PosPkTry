@@ -150,14 +150,14 @@ function fmtDate(iso: string | null): string {
 
 // ─── Channel card ─────────────────────────────────────────────────────────────
 
-const CHANNEL_META: Record<string, { label: string; color: string; emoji: string }> = {
-  telegram: { label: 'Telegram', color: 'var(--ocean)',   emoji: '✈' },
-  max:      { label: 'Max',      color: 'var(--accent)',  emoji: 'M' },
-  web:      { label: 'Сайт',    color: 'var(--success)', emoji: '🌐' },
+const CHANNEL_META: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  telegram: { label: 'Telegram', color: 'var(--ocean)',   icon: <Send size={14} /> },
+  max:      { label: 'Max',      color: 'var(--accent)',  icon: <span className="text-xs font-bold">M</span> },
+  web:      { label: 'Сайт',    color: 'var(--success)', icon: <Globe size={14} /> },
 };
 
 function ChannelCard({ id, stats }: { id: string; stats: ChannelStats }) {
-  const meta = CHANNEL_META[id] ?? { label: id, color: 'var(--text-secondary)', emoji: '?' };
+  const meta = CHANNEL_META[id] ?? { label: id, color: 'var(--text-secondary)', icon: <span className="text-xs">?</span> };
   return (
     <div className="ds-card p-5 flex flex-col gap-3">
       <div className="flex items-center gap-2">
@@ -165,7 +165,7 @@ function ChannelCard({ id, stats }: { id: string; stats: ChannelStats }) {
           className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white shrink-0"
           style={{ background: meta.color }}
         >
-          {meta.emoji}
+          {meta.icon}
         </div>
         <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{meta.label}</span>
       </div>

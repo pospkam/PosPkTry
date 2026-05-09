@@ -42,7 +42,7 @@ export default function PlaceSafety({ safety, placeId: _ }: Props) {
 
   return (
     <section className="max-w-3xl mx-auto px-4 mt-6">
-      <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--warning)]/5 overflow-hidden">
+      <div className="rounded-lg border border-[var(--warning)]/30 bg-[var(--warning)]/5 overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--warning)]/20">

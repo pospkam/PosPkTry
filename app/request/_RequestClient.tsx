@@ -98,7 +98,7 @@ export default function RequestClient() {
           </div>
 
           {/* Right — форма */}
-          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-8">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-8">
 
             {/* Telegram — primary CTA */}
             <a href={BOT_URL} target="_blank" rel="noopener noreferrer"
@@ -116,7 +116,7 @@ export default function RequestClient() {
 
             {state === 'done' ? (
               <div className="text-center py-6">
-                <div className="w-16 h-16 rounded-2xl bg-[var(--success)]/10 flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 rounded-lg bg-[var(--success)]/10 flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-8 h-8 text-[var(--success)]" />
                 </div>
                 <p className="font-semibold text-[var(--text-primary)] mb-1">Заявка принята!</p>

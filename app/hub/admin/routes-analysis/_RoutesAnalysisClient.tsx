@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   MapPin, TrendingUp, AlertTriangle, Users, DollarSign,
-  Zap, Loader2, RefreshCw, Download, GripVertical,
+  Zap, Loader2, RefreshCw, Download, GripVertical, BarChart2, Plus,
 } from 'lucide-react';
 
 interface LocationAnalysis {
@@ -150,7 +150,7 @@ export default function RoutesAnalysisClient() {
           { label: 'Мест', value: data.total_locations, icon: MapPin },
           { label: 'Туров', value: data.total_tours, icon: Zap },
           { label: 'Бронирований', value: data.total_bookings, icon: Users },
-          { label: 'За месяц', value: '📈', icon: TrendingUp },
+          { label: 'За месяц', value: '—', icon: TrendingUp },
         ].map((stat, i) => (
           <div key={i} className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
@@ -165,7 +165,7 @@ export default function RoutesAnalysisClient() {
       {/* Summary Insights */}
       {data.summary && (
         <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-4 space-y-3">
-          <p className="text-sm font-semibold text-[var(--text-primary)]">📊 Итоги</p>
+          <p className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-1.5"><BarChart2 className="w-4 h-4" /> Итоги</p>
           <div className="space-y-2 text-sm">
             <div>
               <span className="text-[var(--text-muted)]">Популярное:</span>
@@ -181,7 +181,7 @@ export default function RoutesAnalysisClient() {
             </div>
             {data.summary.critical_alerts.length > 0 && (
               <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
-                <p className="text-red-700 font-semibold text-xs mb-1">🚨 Критические алерты:</p>
+                <p className="text-red-700 font-semibold text-xs mb-1 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> Критические алерты:</p>
                 {data.summary.critical_alerts.map((a, i) => (
                   <p key={i} className="text-xs text-red-600 dark:text-red-400">{a}</p>
                 ))}
@@ -189,7 +189,7 @@ export default function RoutesAnalysisClient() {
             )}
             {data.summary.needs_operators.length > 0 && (
               <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-                <p className="text-blue-700 font-semibold text-xs mb-1">🆕 Ищем операторов:</p>
+                <p className="text-blue-700 font-semibold text-xs mb-1 flex items-center gap-1"><Plus className="w-3.5 h-3.5" /> Ищем операторов:</p>
                 {data.summary.needs_operators.map((p, i) => (
                   <p key={i} className="text-xs text-blue-600 dark:text-blue-400">{p}</p>
                 ))}

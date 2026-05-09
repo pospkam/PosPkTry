@@ -2,7 +2,7 @@
 
 import { useState, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { Star, ArrowLeft, Send } from 'lucide-react';
+import { Star, ArrowLeft, Send, Mountain } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 
 interface Props {
@@ -75,7 +75,7 @@ export default function PlaceReviewPage({ params }: Props) {
       <>
         <Header />
         <div className="max-w-lg mx-auto px-4 py-20 text-center space-y-4">
-          <div className="text-5xl">🏔</div>
+          <Mountain className="w-12 h-12 text-[var(--text-muted)] mx-auto" />
           <h1 className="text-2xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-playfair)' }}>
             Спасибо за отзыв!
           </h1>

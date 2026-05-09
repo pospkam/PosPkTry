@@ -69,7 +69,6 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/octo': 'ALL',               // OCTO API — авторизация через Bearer token внутри
   '/api/apply-op-tours-cols': ['GET'], // operator_tours колонки + marketplace view (migration 056)
   '/api/link-fishingkam-tours': ['GET'], // линкует operator_tours kamchatskaya-rybalka → agent_route_knowledge
-  '/api/setup-rafting-tour': ['POST'], // create rafting tour (temporary)
   '/api/hub/marketplace/tours': ['GET'], // публичный каталог туров маршрутплейса
   '/api/hub/bookings': ['GET'],           // booking-success страница (без персональных данных, ФЗ-152 ок)
   '/api/places': ['GET'],                 // карточка точки/локации (публичная)
@@ -77,7 +76,6 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/widget': ['POST', 'GET', 'OPTIONS'],    // Partner widget API — CORS-enabled
   '/api/health': ['GET'],              // health checks — monitoring/infra
   '/api/test-deploy': ['GET'],         // deploy verification
-  '/api/setup-fishingkam-widget': ['GET'], // one-time widget setup for fishingkam
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {

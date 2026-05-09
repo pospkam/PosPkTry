@@ -632,7 +632,7 @@ export default function SafetyHubClient() {
                     </div>
                   )}
                   <div
-                    className="max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap"
+                    className="max-w-[80%] px-4 py-3 rounded-lg text-sm leading-relaxed whitespace-pre-wrap"
                     style={msg.role === 'assistant'
                       ? { background: 'var(--bg-hover)', color: 'var(--text-primary)', borderRadius: '4px 16px 16px 16px' }
                       : { background: 'var(--danger)', color: '#fff', borderRadius: '16px 4px 16px 16px' }
@@ -648,7 +648,7 @@ export default function SafetyHubClient() {
                     style={{ background: 'color-mix(in srgb, var(--danger) 15%, transparent)' }}>
                     <Bot className="w-4 h-4" style={{ color: 'var(--danger)' }} />
                   </div>
-                  <div className="px-4 py-3 rounded-2xl text-sm" style={{ background: 'var(--bg-hover)', borderRadius: '4px 16px 16px 16px' }}>
+                  <div className="px-4 py-3 rounded-lg text-sm" style={{ background: 'var(--bg-hover)', borderRadius: '4px 16px 16px 16px' }}>
                     <span className="flex gap-1 items-center text-[var(--text-muted)]">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce" style={{ animationDelay: '0ms' }} />
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce" style={{ animationDelay: '150ms' }} />

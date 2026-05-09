@@ -119,7 +119,7 @@ export default async function FishDetailPage({ params }: Props) {
 
             <div className="flex items-start gap-5">
               <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
+                className="w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0"
                 style={{ background: `${species.color}20` }}
               >
                 <Fish className="w-8 h-8" style={{ color: species.color }} />

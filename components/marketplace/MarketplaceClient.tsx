@@ -172,7 +172,7 @@ function getSeasonLabel(): string {
 
 function TourCardSkeleton() {
   return (
-    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl overflow-hidden">
+    <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden">
       <div className="ds-skeleton h-56 w-full" />
       <div className="p-5 space-y-3">
         <div className="ds-skeleton h-3 w-1/3 rounded" />
@@ -189,7 +189,7 @@ function TourCardSkeleton() {
 
 function HeroSection() {
   return (
-    <div className="relative -mx-4 sm:-mx-6 lg:-mx-8 mb-10 overflow-hidden rounded-none sm:rounded-2xl">
+    <div className="relative -mx-4 sm:-mx-6 lg:-mx-8 mb-10 overflow-hidden rounded-none sm:rounded-lg">
       <div className="relative h-[320px] sm:h-[380px] lg:h-[420px]">
         <Image
           src="/images/marketplace/hero-marketplace.jpg"
@@ -204,11 +204,11 @@ function HeroSection() {
 
         <div className="relative h-full flex flex-col justify-end p-6 sm:p-10 lg:p-12 max-w-2xl">
           <div className="flex items-center gap-2 mb-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent)]/90 text-white text-xs font-semibold backdrop-blur-sm">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent)]/90 text-white text-xs font-semibold">
               <TrendingUp className="w-3 h-3" />
               {getSeasonLabel()} 2026
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-medium backdrop-blur-sm">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--bg-hover)] text-white text-xs font-medium">
               <Mountain className="w-3 h-3" />
               13 туров
             </span>
@@ -234,7 +234,7 @@ function HeroSection() {
             </Link>
             <a
               href="#tours"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-sm font-medium transition-all duration-200 backdrop-blur-sm border border-white/20"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--bg-hover)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] text-sm font-medium transition-all duration-200 border border-[var(--border)]"
             >
               Смотреть все туры
               <ArrowRight className="w-4 h-4" />
@@ -314,7 +314,7 @@ function TourCard({
   };
 
   return (
-    <div className="group bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl overflow-hidden flex flex-col hover:border-[var(--accent)]/40 hover:shadow-2xl hover:shadow-[var(--accent)]/8 transition-all duration-300 relative">
+    <div className="group bg-[var(--bg-card)] border border-[var(--border)] rounded-lg overflow-hidden flex flex-col hover:border-[var(--accent)]/40 hover:shadow-2xl hover:shadow-[var(--accent)]/8 transition-all duration-300 relative">
       {/* Image */}
       <Link href={`/marketplace/tours/${tour.id}`} className="block flex-shrink-0">
         <div className="relative aspect-[16/10] bg-[var(--bg-hover)] overflow-hidden">
@@ -329,11 +329,11 @@ function TourCard({
 
           {/* Badges top-left */}
           <div className="absolute top-3 left-3 flex items-center gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-black/50 backdrop-blur-md text-white px-2.5 py-1 rounded-lg">
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-black/50 text-white px-2.5 py-1 rounded-lg">
               {activityLabel}
             </span>
             {diffBadge && (
-              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg backdrop-blur-md ${diffBadge.cls}`}>
+              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg ${diffBadge.cls}`}>
                 {diffBadge.label}
               </span>
             )}
@@ -341,7 +341,7 @@ function TourCard({
 
           {/* Season badge */}
           {inSeason && (
-            <span className="absolute top-3 right-14 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/80 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-wider">
+            <span className="absolute top-3 right-14 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/80 text-white text-[9px] font-bold uppercase tracking-wider">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               Сезон
             </span>
@@ -368,7 +368,7 @@ function TourCard({
               </span>
             </div>
             {duration && (
-              <span className="flex items-center gap-1 text-[11px] text-white/70 bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-md">
+              <span className="flex items-center gap-1 text-[11px] text-white/70 bg-black/30 px-2 py-0.5 rounded-md">
                 <Clock className="w-3 h-3" />
                 {duration}
               </span>
@@ -380,7 +380,7 @@ function TourCard({
       {/* Favorite */}
       <button
         onClick={() => onToggleLike(tour.id)}
-        className="absolute top-3 right-3 z-10 w-9 h-9 rounded-xl bg-black/40 backdrop-blur-md flex items-center justify-center transition-all hover:bg-black/60 hover:scale-110"
+        className="absolute top-3 right-3 z-10 w-9 h-9 rounded-xl bg-black/40 flex items-center justify-center transition-all hover:bg-black/60 hover:scale-110"
         aria-label={isLiked ? 'Убрать из избранного' : 'В избранное'}
       >
         <Heart
@@ -599,7 +599,7 @@ export default function MarketplaceClient() {
             <button
               key={cat.key}
               onClick={() => setActivityFilter(activityFilter === cat.key ? '' : cat.key)}
-              className={`group flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border transition-all duration-300 ${
+              className={`group flex flex-col items-center gap-2 py-4 px-2 rounded-lg border transition-all duration-300 ${
                 activityFilter === cat.key
                   ? `bg-gradient-to-b ${cat.color} border-transparent ring-2 ${cat.ring} ring-offset-2 ring-offset-[var(--bg-page)] scale-[1.02]`
                   : 'border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--border-strong)] hover:scale-[1.03] hover:shadow-md'
@@ -632,7 +632,7 @@ export default function MarketplaceClient() {
       {/* ─── AI Planner Banner ─── */}
       <Link
         href="/planner"
-        className="group flex items-center gap-4 p-5 rounded-2xl border border-[var(--accent)]/20 bg-gradient-to-r from-[var(--accent)]/8 to-[var(--accent)]/3 hover:from-[var(--accent)]/12 hover:to-[var(--accent)]/6 transition-all duration-300 mb-8"
+        className="group flex items-center gap-4 p-5 rounded-lg border border-[var(--accent)]/20 bg-gradient-to-r from-[var(--accent)]/8 to-[var(--accent)]/3 hover:from-[var(--accent)]/12 hover:to-[var(--accent)]/6 transition-all duration-300 mb-8"
       >
         <div className="w-11 h-11 rounded-xl bg-[var(--accent)]/15 flex items-center justify-center shrink-0 group-hover:bg-[var(--accent)]/25 transition-colors">
           <Sparkles className="w-5 h-5 text-[var(--accent)]" />
@@ -713,7 +713,7 @@ export default function MarketplaceClient() {
 
         {/* Expandable Filter Panel */}
         {showFilters && (
-          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5 mb-5 shadow-sm">
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-5 mb-5 shadow-sm">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <div>
                 <p className="ds-label mb-2.5 text-xs font-semibold uppercase tracking-wider">Цена</p>
@@ -801,13 +801,13 @@ export default function MarketplaceClient() {
             {Array.from({ length: 6 }).map((_, i) => <TourCardSkeleton key={i} />)}
           </div>
         ) : error ? (
-          <div className="flex items-center gap-3 text-[var(--danger)] bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-2xl p-5">
+          <div className="flex items-center gap-3 text-[var(--danger)] bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-lg p-5">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <p className="text-sm">{error}</p>
           </div>
         ) : tours.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-16 h-16 rounded-2xl bg-[var(--bg-hover)] flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-lg bg-[var(--bg-hover)] flex items-center justify-center mx-auto mb-4">
               <Search className="w-7 h-7 text-[var(--text-muted)]" />
             </div>
             <p className="ds-h2 mb-2">Туры не найдены</p>

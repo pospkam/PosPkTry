@@ -84,9 +84,14 @@ ${greeting ? `Приветствие: ${greeting}` : ''}
 
 export async function OPTIONS(request: NextRequest) {
   const origin = request.headers.get('origin');
-  // For OPTIONS preflight, allow all widget origins
-  const headers = getCorsHeaders(origin, ['*']);
-  headers['Access-Control-Allow-Origin'] = origin || '*';
+  const headers: Record<string, string> = {
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Max-Age': '86400',
+  };
+  if (origin) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  }
   return new NextResponse(null, { status: 204, headers });
 }
 

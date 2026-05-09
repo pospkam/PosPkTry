@@ -4,58 +4,93 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { paymentService } from '@/lib/services'
-import crypto from 'crypto'
 
 type PaymentServiceWithWebhook = {
   handleWebhook(gateway: string, data: Record<string, unknown>): Promise<void>;
 };
 const ps = paymentService as unknown as PaymentServiceWithWebhook;
 
+const YandexKassaBodySchema = z.object({
+  notification_type: z.string(),
+  operation_id: z.string().optional(),
+  amount: z.number().optional(),
+  currency: z.string().optional(),
+  datetime: z.string().optional(),
+  label: z.string().optional(),
+});
+
+const StripeBodySchema = z.object({
+  type: z.string(),
+  data: z.object({
+    object: z.object({
+      id: z.string(),
+      amount: z.number(),
+      currency: z.string(),
+      metadata: z.record(z.string()).optional(),
+    }),
+  }).optional(),
+});
+
+const SberbankBodySchema = z.object({
+  order: z.object({
+    orderNumber: z.string().optional(),
+    orderStatus: z.number(),
+    orderAmount: z.number().optional(),
+    orderDate: z.number().optional(),
+  }).optional(),
+  orderNumber: z.string().optional(),
+  orderStatus: z.number().optional(),
+  orderAmount: z.number().optional(),
+  orderDate: z.number().optional(),
+});
+
 /**
  * POST /api/webhooks/payments
- * Handle webhooks from payment gateways (Yandex Kassa, Stripe, etc.)
- * Verifies webhook signature and processes payment status updates
- *
- * AUTH: Public by design — webhooks protected by x-signature/x-signature-256 headers.
+ * AUTH: Public — protected by signature headers inside handlers.
  */
 export async function POST(request: NextRequest) {
   try {
-    // Get webhook signature from headers
     const signature = request.headers.get('x-signature') || request.headers.get('x-signature-256')
     const gateway = request.headers.get('x-gateway') || 'yandex_kassa'
 
-    // Parse body
-    const body = await request.json()
+    const rawBody = await request.json() as unknown
 
-    // Verify signature (implementation depends on gateway)
-    // For Yandex Kassa:
-    // 1. Get secretKey from config
-    // 2. Create SHA1 hash: sha1(body.notification_type;body.operation_id;body.amount;body.currency;body.datetime;body.sender;body.receiver;body.label;secretKey)
-    // 3. Compare with x-signature header
-
-    // Handle webhook based on gateway
     switch (gateway) {
-      case 'yandex_kassa':
-        await handleYandexKassaWebhook(body, signature)
+      case 'yandex_kassa': {
+        const parsed = YandexKassaBodySchema.safeParse(rawBody)
+        if (!parsed.success) {
+          return NextResponse.json({ status: 'ok' }, { status: 200 })
+        }
+        await handleYandexKassaWebhook(parsed.data, signature)
         break
-      case 'stripe':
-        await handleStripeWebhook(body, signature)
+      }
+      case 'stripe': {
+        const parsed = StripeBodySchema.safeParse(rawBody)
+        if (!parsed.success) {
+          return NextResponse.json({ status: 'ok' }, { status: 200 })
+        }
+        await handleStripeWebhook(parsed.data, signature)
         break
-      case 'sberbank':
-        await handleSberbankWebhook(body, signature)
+      }
+      case 'sberbank': {
+        const parsed = SberbankBodySchema.safeParse(rawBody)
+        if (!parsed.success) {
+          return NextResponse.json({ status: 'ok' }, { status: 200 })
+        }
+        await handleSberbankWebhook(parsed.data, signature)
         break
+      }
       default:
-        // Generic handling
-        await ps.handleWebhook(gateway, body)
+        if (rawBody && typeof rawBody === 'object') {
+          await ps.handleWebhook(gateway, rawBody as Record<string, unknown>)
+        }
     }
 
-    // Return 200 OK to acknowledge receipt
     return NextResponse.json({ status: 'ok' }, { status: 200 })
   } catch (error) {
-
     // Always return 200 to prevent gateway retry
-    // Log error for investigation
     return NextResponse.json(
       { status: 'error', message: error instanceof Error ? error.message : 'Processing failed' },
       { status: 200 }
@@ -63,25 +98,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * Handle Yandex Kassa webhook
- */
-async function handleYandexKassaWebhook(body: any, signature: string | null): Promise<void> {
-  // Yandex Kassa sends notifications in XML format
-  // Body structure:
-  // {
-  //   "notification_type": "payment.succeeded" | "payment.failed",
-  //   "operation_id": "...",
-  //   "amount": 1000.00,
-  //   "currency": "RUB",
-  //   "datetime": "2024-01-01T12:00:00Z",
-  //   "sender": "...",
-  //   "receiver": "...",
-  //   "label": "booking_123",
-  //   "sha1_hash": "..."
-  // }
+type YandexKassaBody = z.infer<typeof YandexKassaBodySchema>
+type StripeBody = z.infer<typeof StripeBodySchema>
+type SberbankBody = z.infer<typeof SberbankBodySchema>
 
+async function handleYandexKassaWebhook(body: YandexKassaBody, _signature: string | null): Promise<void> {
   const transactionId = body.label || body.operation_id
+  if (!transactionId) return
 
   if (body.notification_type === 'payment.succeeded') {
     await ps.handleWebhook('yandex_kassa', {
@@ -102,40 +125,19 @@ async function handleYandexKassaWebhook(body: any, signature: string | null): Pr
   }
 }
 
-/**
- * Handle Stripe webhook
- */
-async function handleStripeWebhook(body: any, signature: string | null): Promise<void> {
-  // Stripe sends events in this structure:
-  // {
-  //   "id": "evt_...",
-  //   "object": "event",
-  //   "type": "charge.succeeded" | "charge.failed",
-  //   "data": {
-  //     "object": {
-  //       "id": "ch_...",
-  //       "amount": 100000,  // in cents
-  //       "currency": "rub",
-  //       "status": "succeeded",
-  //       "metadata": { "booking_id": "..." }
-  //     }
-  //   }
-  // }
-
-  const eventType = body.type
+async function handleStripeWebhook(body: StripeBody, _signature: string | null): Promise<void> {
   const charge = body.data?.object
-
   if (!charge) return
 
-  if (eventType === 'charge.succeeded') {
+  if (body.type === 'charge.succeeded') {
     await ps.handleWebhook('stripe', {
       transaction_id: charge.id,
       status: 'completed',
-      amount: charge.amount / 100, // Convert from cents
+      amount: charge.amount / 100,
       currency: charge.currency.toUpperCase(),
       booking_id: charge.metadata?.booking_id,
     })
-  } else if (eventType === 'charge.failed') {
+  } else if (body.type === 'charge.failed') {
     await ps.handleWebhook('stripe', {
       transaction_id: charge.id,
       status: 'failed',
@@ -146,27 +148,11 @@ async function handleStripeWebhook(body: any, signature: string | null): Promise
   }
 }
 
-/**
- * Handle Sberbank webhook
- */
-async function handleSberbankWebhook(body: any, signature: string | null): Promise<void> {
-  // Sberbank sends notifications like:
-  // {
-  //   "order": {
-  //     "orderNumber": "booking_123",
-  //     "orderStatus": 2,  // 0 = created, 1 = approved, 2 = deposited, 3 = declined, 4 = cancelled, 5 = refunded
-  //     "orderAmount": 100000,  // in kopecks
-  //     "orderCurrency": 810,  // RUB
-  //     "orderDate": 1234567890000
-  //   }
-  // }
-
-  const order = body.order || body
-
-  if (!order) return
+async function handleSberbankWebhook(body: SberbankBody, _signature: string | null): Promise<void> {
+  const order = body.order ?? body
+  if (!order || order.orderStatus === undefined) return
 
   let status = 'pending'
-
   if (order.orderStatus === 2) {
     status = 'completed'
   } else if (order.orderStatus === 3 || order.orderStatus === 4) {
@@ -175,20 +161,19 @@ async function handleSberbankWebhook(body: any, signature: string | null): Promi
     status = 'refunded'
   }
 
+  const amount = order.orderAmount !== undefined ? order.orderAmount / 100 : undefined
+  const datetime = order.orderDate !== undefined ? new Date(order.orderDate) : undefined
+
   await ps.handleWebhook('sberbank', {
     transaction_id: order.orderNumber,
     status,
-    amount: order.orderAmount / 100, // Convert from kopecks
+    amount,
     currency: 'RUB',
-    datetime: new Date(order.orderDate),
+    datetime,
   })
 }
 
-/**
- * GET /api/webhooks/payments
- * Health check endpoint
- */
-export async function GET(request: NextRequest) {
+export async function GET() {
   return NextResponse.json({
     status: 'ok',
     message: 'Webhook endpoint is active',

@@ -13,7 +13,7 @@ export function HeroBoard() {
   }, []);
 
   return (
-    <section className="relative overflow-hidden rounded-2xl">
+    <section className="relative overflow-hidden rounded-lg">
       {/* Фоновое фото с градиентом */}
       <div className="absolute inset-0 z-0">
         <img
@@ -58,7 +58,7 @@ export function HeroBoard() {
           </Link>
           <Link
             href="/marketplace"
-            className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 backdrop-blur-sm px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-white/20 hover:border-white/50 active:scale-95"
+            className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-white/20 hover:border-white/50 active:scale-95"
           >
             Смотреть туры
           </Link>

@@ -285,7 +285,7 @@ export default function MapPageClient() {
       <div className="fixed inset-0 z-50 bg-black">
         {/* Офлайн-баннер сверху */}
         <div className="absolute top-0 left-0 right-0 z-[500] px-3 pt-3">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/60 backdrop-blur-md border border-amber-500/40 text-amber-300 text-sm">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--bg-card)]/90 border border-amber-500/40 text-amber-300 text-sm">
             <WifiOff className="w-4 h-4 shrink-0" />
             <span className="font-medium">Офлайн</span>
             <span className="text-amber-300/60">·</span>
@@ -309,7 +309,7 @@ export default function MapPageClient() {
         <div className="absolute top-16 right-3 z-[500] flex flex-col gap-2">
           <Link
             href="/offline/manage"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-medium hover:bg-black/80 transition-all"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--bg-card)]/90 border border-white/20 text-white text-xs font-medium hover:bg-[var(--bg-card)]/95 transition-all"
           >
             <AlertTriangle className="w-3.5 h-3.5" />
             Скачать
@@ -343,7 +343,7 @@ export default function MapPageClient() {
 
         {/* Фильтры — снизу, поверх карты, крупные для перчаток */}
         <div className="absolute bottom-0 left-0 right-0 z-[500]">
-          <div className="bg-black/60 backdrop-blur-md border-t border-white/10 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="bg-[var(--bg-card)]/90 border-t border-white/10 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <div className="flex gap-2 overflow-x-auto pb-1">
               {OFFLINE_FILTERS.map(f => {
                 const cnt = countFor(f.id);
@@ -373,7 +373,7 @@ export default function MapPageClient() {
 
         {/* GPS-координаты пользователя */}
         {userPos && showMyLocation && (
-          <div className="absolute bottom-20 left-3 z-[500] bg-black/60 backdrop-blur-md border border-white/20 rounded-lg px-3 py-1.5">
+          <div className="absolute bottom-20 left-3 z-[500] bg-[var(--bg-card)]/90 border border-white/20 rounded-lg px-3 py-1.5">
             <p className="text-[10px] text-white/50 uppercase tracking-wider font-mono">Вы здесь</p>
             <p className="text-xs text-white font-mono">{userPos.lat.toFixed(4)}, {userPos.lng.toFixed(4)}</p>
           </div>
@@ -381,7 +381,7 @@ export default function MapPageClient() {
 
         {/* 🔴 SOS-панель — экстренные номера (tel: ссылки работают без интернета!) */}
         {showSos && (
-          <div className="absolute bottom-24 left-3 right-3 z-[500] rounded-xl bg-black/85 backdrop-blur-xl border border-red-500/40 shadow-2xl shadow-red-900/20">
+          <div className="absolute bottom-24 left-3 right-3 z-[500] rounded-lg bg-[var(--bg-card)]/95 border border-red-500/40 shadow-2xl shadow-red-900/20">
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-white font-bold text-sm flex items-center gap-2">
@@ -476,7 +476,7 @@ export default function MapPageClient() {
         {/* Панель выбранного маршрута */}
         {selectedRoute && (
           <div
-            className="absolute bottom-24 left-3 right-3 z-[500] rounded-xl bg-black/80 backdrop-blur-xl border border-white/20 shadow-2xl"
+            className="absolute bottom-24 left-3 right-3 z-[500] rounded-lg bg-[var(--bg-card)]/95 border border-white/20 shadow-2xl"
             style={{ animation: 'slideUp 0.2s ease-out' }}
           >
             <div className="p-4">
@@ -687,7 +687,7 @@ export default function MapPageClient() {
       <Link
         href="/return"
         className="fixed top-20 left-3 z-[500] flex items-center gap-2 px-3 py-2 rounded-lg
-          bg-green-600/90 backdrop-blur-sm text-white text-xs font-semibold shadow-lg
+          bg-[var(--success)]/90 text-white text-xs font-semibold shadow-lg
           hover:bg-green-700 transition-colors"
       >
         ✅ Я вернулся
