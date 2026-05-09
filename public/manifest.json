@@ -1,6 +1,6 @@
 {
-  "name": "KamchatourHub — Камчатка в кармане",
-  "short_name": "KamchatourHub",
+  "name": "Камчатка в кармане",
+  "short_name": "Камчатка",
   "description": "Туристическая платформа Камчатки. Маршруты, безопасность, проводник Кузьмич.",
   "start_url": "/",
   "scope": "/",
