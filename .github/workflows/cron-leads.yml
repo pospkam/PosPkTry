@@ -5,8 +5,6 @@ name: Cron — Lead AI Processing + Follow-ups
 # 2. /api/cron/followups    — follow-up напоминания Day+1/2/5
 
 on:
-  schedule:
-    - cron: '*/30 * * * *'  # каждые 30 минут: обработка лидов + follow-ups
   workflow_dispatch:          # manual trigger from GitHub Actions UI
 
 jobs:
