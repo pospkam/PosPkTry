@@ -173,7 +173,9 @@ guide_certifications (112)         ← аттестации гидов
 
 ### Обратная совместимость
 
-`agent_route_knowledge` — теперь **VIEW** (UNION ALL `places` + `kamchatka_routes`). Старый код продолжает работать. `_agent_route_knowledge_legacy` — старая таблица, не использовать.
+`agent_route_knowledge` — теперь **VIEW** (UNION ALL `places` + `kamchatka_routes`). UPDATE/INSERT через INSTEAD OF триггеры (Migration 663). `_agent_route_knowledge_legacy` — старая таблица, не использовать.
+
+**Запрещено для нового кода:** `INSERT INTO agent_route_knowledge` напрямую — писать в `places` или `kamchatka_routes`.
 
 ### Правила для нового кода
 
@@ -284,6 +286,35 @@ GitHub Actions: `.github/workflows/cron-watchdog.yml`, `cron-editor.yml`, `cron-
 - Файлы с `CREATE INDEX CONCURRENTLY` автоматически определяются и применяются вне транзакции (без BEGIN/COMMIT), statement-by-statement
 - Все миграции должны быть идемпотентны (`IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`)
 - Bootstrap tracking на новом инстансе: `DATABASE_URL=<prod> npx tsx scripts/bootstrap-migrations-tracking.ts`
+- **Авто-миграции при деплое:** `start.js` запускает `scripts/migrate-standalone.js` перед стартом сервера
+
+---
+
+## 6.1 DOCKER / TIMEWEB ОГРАНИЧЕНИЯ
+
+**КРИТИЧНО — читать перед любыми изменениями Dockerfile:**
+
+| Ограничение | Значение |
+|-------------|---------|
+| Лимит размера standalone | **50 МБ** — превышение = деплой падает |
+| `images.unoptimized: true` | Убирает sharp (~33 МБ) — **не убирать!** |
+| `node_modules` в runner stage | **НЕ копировать вручную** — всё уже в `.next/standalone/node_modules` |
+| `tsx` в runner | Недоступен — только CJS (`require`) |
+
+**Запрещено в Dockerfile runner stage:**
+- `COPY --from=builder /app/node_modules ./node_modules` — раздует образ
+- `COPY node_modules/anything` по отдельности — это уже есть в standalone bundle
+- Установка npm пакетов через `RUN npm install` в runner
+
+**Разрешённые COPY в runner:**
+```
+COPY --from=builder /app/.next/standalone ./        ← весь standalone (включает node_modules)
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /app/scripts/migrate-standalone.js ./scripts/migrate-standalone.js
+COPY --from=builder /app/start.js ./start.js
+```
 
 ---
 
