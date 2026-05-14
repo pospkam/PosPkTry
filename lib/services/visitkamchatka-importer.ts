@@ -283,10 +283,10 @@ export async function importVisitKamchatka(): Promise<ImportResult> {
   });
 
   // Импортируем по одному (не DDoS)
+  // agent_route_knowledge — VIEW над kamchatka_routes, отдельный INSERT не нужен
   for (const route of routes) {
     try {
       const status = await upsertKamchatkaRoute(route);
-      await upsertAgentKnowledge(route);
       if (status === 'inserted') result.inserted++;
       else result.updated++;
       result.routes.push({ title: route.title, status });
