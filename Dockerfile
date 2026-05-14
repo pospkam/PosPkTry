@@ -35,8 +35,15 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=builder /app/public           ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static     ./.next/static
-COPY --from=builder /app/migrations       ./migrations
-COPY --from=builder /app/start.js         ./start.js
+COPY --from=builder /app/migrations                       ./migrations
+COPY --from=builder /app/scripts/migrate-standalone.js    ./scripts/migrate-standalone.js
+COPY --from=builder /app/node_modules/pg                  ./node_modules/pg
+COPY --from=builder /app/node_modules/pg-protocol         ./node_modules/pg-protocol
+COPY --from=builder /app/node_modules/pg-types            ./node_modules/pg-types
+COPY --from=builder /app/node_modules/pg-pool             ./node_modules/pg-pool
+COPY --from=builder /app/node_modules/pg-connection-string ./node_modules/pg-connection-string
+COPY --from=builder /app/node_modules/pgpass              ./node_modules/pgpass
+COPY --from=builder /app/start.js                         ./start.js
 
 EXPOSE 3000
 ENV PORT=3000

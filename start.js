@@ -22,4 +22,15 @@ const proxy = http.createServer((req, res) => {
   req.pipe(p);
 });
 proxy.listen(PORT, '0.0.0.0', () => console.log('[proxy] listening'));
+
+// Run DB migrations before starting Next.js (non-blocking on failure)
+const { execFileSync } = require('child_process');
+try {
+  execFileSync('node', ['scripts/migrate-standalone.js'], {
+    env: process.env, stdio: 'inherit', cwd: __dirname, timeout: 60000,
+  });
+} catch (e) {
+  console.error('[migrate] error during startup migration (continuing):', e.message);
+}
+
 spawn('node', ['server.js'], { env: { ...process.env, PORT: '3001', HOSTNAME: '127.0.0.1' }, stdio: 'inherit', cwd: __dirname });
