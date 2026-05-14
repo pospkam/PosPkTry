@@ -77,7 +77,7 @@ interface ORResponse {
 export async function runSDKAgent(config: SDKRunnerConfig): Promise<SDKRunResult> {
   const {
     agentId, intent, systemPrompt, userMessage, tools,
-    model = 'anthropic/claude-3.5-sonnet',
+    model = 'anthropic/claude-sonnet-4-6',
     maxIterations = 8,
     experimentId,
   } = config;
