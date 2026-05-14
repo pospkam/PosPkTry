@@ -16,6 +16,7 @@ const nextConfig = {
     'tourhab.ru',
     'www.tourhab.ru',
     'pospkam-pospktry-c1f3.twc1.net',
+    'api.timeweb.cloud',
     'localhost',
   ],
   // outputFileTracingRoot removed — may prevent standalone output
