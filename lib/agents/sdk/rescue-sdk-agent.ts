@@ -55,7 +55,7 @@ export async function runRescueSDKAgent(experimentId?: string): Promise<{ respon
       makeQueryTool('rescue'),
       makeSendAlertTool(),
     ],
-    model:         'anthropic/claude-3.5-sonnet',
+    model:         'anthropic/claude-sonnet-4-6',
     maxIterations: 6,
     experimentId,
   });

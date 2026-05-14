@@ -92,7 +92,7 @@ export async function runEvoSDKAgent(experimentId?: string): Promise<{ response:
       makeWriteMemoryTool(),
       makeListExperimentsTool(),
     ],
-    model:         'anthropic/claude-3.5-sonnet',
+    model:         'anthropic/claude-sonnet-4-6',
     maxIterations: 8,
     experimentId,
   });
