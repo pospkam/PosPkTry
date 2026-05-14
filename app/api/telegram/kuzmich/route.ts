@@ -27,6 +27,10 @@ export const dynamic = 'force-dynamic';
 const pending = new Map<number, PendingBooking>();
 setInterval(() => cleanupPending(pending), 5 * 60 * 1000);
 
+// Deduplicate Telegram retries — store last 500 update_ids, flush every 10 min
+const processedUpdates = new Set<number>();
+setInterval(() => processedUpdates.clear(), 10 * 60 * 1000);
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function botToken() {
@@ -365,6 +369,7 @@ interface TgVoice      { file_id: string; duration: number; mime_type?: string }
 interface TgVideoNote  { file_id: string; duration: number }
 
 interface TgUpdate {
+  update_id?: number;
   message?: {
     chat:    { id: number; type: 'private' | 'group' | 'supergroup' | 'channel'; title?: string };
     from?:   { id: number; first_name?: string; last_name?: string };
@@ -392,6 +397,14 @@ interface TgUpdate {
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const update = await request.json() as TgUpdate;
+
+    // Skip Telegram retries for already-processed updates
+    if (update.update_id !== undefined) {
+      if (processedUpdates.has(update.update_id)) {
+        return NextResponse.json({ ok: true });
+      }
+      processedUpdates.add(update.update_id);
+    }
 
     // ── callback_query: рейтинги ─────────────────────────────────────
     if (update.callback_query) {
