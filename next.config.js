@@ -10,6 +10,14 @@ const nextConfig = {
       bodySizeLimit: '60mb',
     },
   },
+
+  // Next.js 15.3+ DNS-rebinding protection — allow all app domains
+  allowedHosts: [
+    'tourhab.ru',
+    'www.tourhab.ru',
+    'pospkam-pospktry-c1f3.twc1.net',
+    'localhost',
+  ],
   // outputFileTracingRoot removed — may prevent standalone output
 
   // ESLint: skip during build (saves ~500MB RAM) — checks run locally via CI
