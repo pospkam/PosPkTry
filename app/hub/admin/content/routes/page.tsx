@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { MapPin, Eye, EyeOff, Search, RefreshCw, ChevronLeft, ChevronRight, Pencil, X, Loader2 } from 'lucide-react';
+import { MapPin, Eye, EyeOff, Search, RefreshCw, ChevronLeft, ChevronRight, Pencil, X, Loader2, Download, Globe } from 'lucide-react';
 
 const CATEGORIES: Record<string, string> = {
   vulkani: 'Вулканы', geyzery: 'Гейзеры', termalnye_istochniki: 'Термы',
@@ -195,6 +195,37 @@ export default function AdminRoutesPage() {
 
   const visibleCount = routes.filter(r => r.isVisible).length;
 
+  // ── Import controls ────────────────────────────────────────
+  const [importing, setImporting] = useState<'vk' | 'osm' | null>(null);
+  const [importResult, setImportResult] = useState<string | null>(null);
+
+  const runImport = async (type: 'vk' | 'osm') => {
+    setImporting(type);
+    setImportResult(null);
+    try {
+      const url = type === 'vk'
+        ? '/api/admin/import/visitkamchatka'
+        : '/api/admin/import/osm-geometry';
+      const body = type === 'osm' ? JSON.stringify({ limit: 40 }) : undefined;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        ...(body ? { body } : {}),
+      });
+      const json = await res.json();
+      if (type === 'vk') {
+        setImportResult(`visitkamchatka.ru: вставлено ${json.inserted ?? 0}, обновлено ${json.updated ?? 0}, ошибок ${json.errors ?? 0}`);
+      } else {
+        setImportResult(`OSM: импортировано ${json.imported ?? 0}, пропущено ${json.skipped ?? 0}, ошибок ${json.errors ?? 0}. Без трека: ${json.routes_without_geometry ?? '?'}`);
+      }
+      void load();
+    } catch {
+      setImportResult('Ошибка запроса');
+    } finally {
+      setImporting(null);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -209,6 +240,34 @@ export default function AdminRoutesPage() {
         <button type="button" onClick={() => void load()} className="ds-btn ds-btn-secondary flex items-center gap-1.5">
           <RefreshCw className="w-3.5 h-3.5" /> Обновить
         </button>
+      </div>
+
+      {/* Import panel */}
+      <div className="ds-card p-4 space-y-3">
+        <p className="text-sm font-medium text-[var(--text-secondary)]">Импорт данных</p>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => void runImport('vk')}
+            disabled={importing !== null}
+            className="ds-btn ds-btn-secondary flex items-center gap-2"
+          >
+            {importing === 'vk' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+            visitkamchatka.ru
+          </button>
+          <button
+            type="button"
+            onClick={() => void runImport('osm')}
+            disabled={importing !== null}
+            className="ds-btn ds-btn-secondary flex items-center gap-2"
+          >
+            {importing === 'osm' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            GPS треки (OSM, 40 шт.)
+          </button>
+        </div>
+        {importResult && (
+          <p className="text-sm text-[var(--text-secondary)]">{importResult}</p>
+        )}
       </div>
 
       {/* Stats */}
