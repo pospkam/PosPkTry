@@ -45,22 +45,22 @@ export async function GET(request: NextRequest) {
   const result = await pool.query<TourExportRow>(
     `SELECT
        t.id,
-       t.name,
+       t.title AS name,
        t.description,
-       t.price::text,
-       t.duration,
+       t.base_price::text AS price,
+       t.duration_days AS duration,
        t.difficulty,
        t.category,
-       t.max_group_size,
-       t.min_group_size,
+       t.max_participants AS max_group_size,
+       t.min_participants AS min_group_size,
        p.name as op_name,
        p.slug as op_slug,
        p.contact->>'phone' as op_phone,
        p.contact->>'email' as op_email
-     FROM tours t
+     FROM operator_tours t
      JOIN partners p ON t.operator_id = p.id
      WHERE ${conditions.join(' AND ')}
-     ORDER BY p.name, t.name`,
+     ORDER BY p.name, t.title`,
     params
   );
 

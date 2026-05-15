@@ -63,8 +63,8 @@ export async function GET(request: NextRequest) {
         id: string; title: string; description: string; price: number;
         category: string; difficulty: string; ai_tags: Record<string, unknown>;
       }>(
-        `SELECT id, title, description, price, category, difficulty, ai_tags
-         FROM tours
+        `SELECT id, title, description, base_price AS price, category, difficulty, ai_tags
+         FROM operator_tours
          WHERE ${conditions.join(' AND ')}
          ORDER BY rating DESC NULLS LAST
          LIMIT $${pIdx} OFFSET $${pIdx + 1}`,
