@@ -53,22 +53,22 @@ export async function POST(request: NextRequest) {
     const bookingsQuery = `
       SELECT
         b.id,
-        b.start_date,
-        b.guests_count,
-        b.total_price,
-        t.name as tour_name,
-        t.duration,
+        b.booking_date AS start_date,
+        b.participants AS guests_count,
+        COALESCE(b.final_price, b.base_total_price) AS total_price,
+        t.title as tour_name,
+        t.duration_days AS duration,
         p.name as operator_name,
-        p.phone as operator_phone,
-        p.email as operator_email,
+        p.contact->>'phone' as operator_phone,
+        p.contact->>'email' as operator_email,
         u.email as user_email,
         COALESCE(u.name, u.email) as user_name
-      FROM bookings b
-      JOIN tours t ON b.tour_id = t.id
+      FROM operator_bookings b
+      JOIN operator_tours t ON t.id = b.operator_tour_id
       JOIN partners p ON t.operator_id = p.id
-      JOIN users u ON b.user_id = u.id
-      WHERE DATE(b.start_date) = $1
-        AND b.status = 'confirmed'
+      JOIN users u ON u.id = (b.metadata->>'user_id')::uuid
+      WHERE DATE(b.booking_date) = $1
+        AND b.booking_status = 'confirmed'
         AND b.payment_status = 'paid'
         AND u.email IS NOT NULL
       LIMIT 200
