@@ -435,6 +435,32 @@ export async function callAnthropic(messages: ChatMessage[]): Promise<string | n
   }
 }
 
+// Pre-warm the Anthropic prompt cache for a given system prompt.
+// Sends max_tokens=1 with a dummy user turn so Claude caches the system blocks
+// without generating a real response. Call after rebuilding the system context.
+export async function prewarmAnthropicCache(systemContent: string): Promise<void> {
+  const apiKey = getAnthropicKey();
+  if (!apiKey || !systemContent) return;
+  try {
+    await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1,
+        system: buildSystemBlocks(systemContent),
+        messages: [{ role: 'user', content: '.' }],
+      }),
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch { /* fire-and-forget */ }
+}
+
 // ── YandexGPT Lite (Yandex Cloud) ─────────────────────────────
 // Лучший по русскому языку. Без геоблока для России.
 // Env: YANDEX_API_KEY (Api-Key), YANDEX_FOLDER_ID (каталог YC)

@@ -10,7 +10,7 @@
 
 import { pool } from '@/lib/db-pool';
 import { transaction } from '@/lib/database';
-import { callAIWaterfall, callOpenRouterWithTools, CACHE_BREAK_MARKER } from '@/lib/ai/providers';
+import { callAIWaterfall, callOpenRouterWithTools, CACHE_BREAK_MARKER, prewarmAnthropicCache } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 import type { ToolDefinition, ToolCall } from '@/lib/ai/providers';
 import { knowledgeBase } from '@/lib/agents/memory/agent-knowledge';
@@ -405,6 +405,9 @@ export async function buildTourContext(): Promise<string> {
       liveBlock,
     ].filter(Boolean).join('\n');
     _tourContextAt = Date.now();
+    // Прогрев кэша Anthropic — отправляем system prompt до первого реального запроса
+    // Следующий пользователь получит ответ быстрее (cached tokens вместо input tokens)
+    void prewarmAnthropicCache([KUZMICH_SYSTEM, _tourContextCache].join('\n\n'));
     return _tourContextCache;
   } catch {
     return '';

@@ -14,11 +14,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { type PendingBooking, cleanupPending, processMessage, isBookingTrigger } from '@/lib/kuzmich/core';
+import { type PendingBooking, cleanupPending, processMessage, isBookingTrigger, KUZMICH_SYSTEM, buildTourContext } from '@/lib/kuzmich/core';
 import { findOperatorByChatId, processOperatorMessage, registerOperatorChatId } from '@/lib/kuzmich/operator-chat';
 import { PlatformAgent } from '@/lib/agents';
 import { pool } from '@/lib/db-pool';
 import { groupMonitor } from '@/lib/telegram/group-monitor';
+import { prewarmAnthropicCache, CACHE_BREAK_MARKER } from '@/lib/ai/providers';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +31,18 @@ setInterval(() => cleanupPending(pending), 5 * 60 * 1000);
 // Deduplicate Telegram retries — store last 500 update_ids, flush every 10 min
 const processedUpdates = new Set<number>();
 setInterval(() => processedUpdates.clear(), 10 * 60 * 1000);
+
+// Поддерживаем кэш Anthropic тёплым каждые 4.5 мин (TTL кэша = 5 мин)
+// buildTourContext() имеет собственный кэш 10 мин — берём готовый если есть
+setInterval(async () => {
+  try {
+    const tourCtx = await buildTourContext();
+    const system = tourCtx
+      ? `${KUZMICH_SYSTEM}\n\n${CACHE_BREAK_MARKER}\n\n${tourCtx}`
+      : KUZMICH_SYSTEM;
+    void prewarmAnthropicCache(system);
+  } catch { /* fire-and-forget */ }
+}, 4.5 * 60 * 1000);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
