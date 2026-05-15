@@ -30,11 +30,11 @@ export async function GET(request: NextRequest) {
       return adminOrResponse;
     }
     const { searchParams } = new URL(request.url);
-    
+
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = (page - 1) * limit;
-    
+
     const verified = searchParams.get('verified');
     const requestedSortBy = searchParams.get('sortBy') || 'created_at';
     const sortBy = ALLOWED_SORT_FIELDS.has(requestedSortBy) ? requestedSortBy : 'created_at';
@@ -50,8 +50,8 @@ export async function GET(request: NextRequest) {
       paramIndex++;
     }
 
-    const whereClause = whereConditions.length > 0 
-      ? `WHERE ${whereConditions.join(' AND ')}` 
+    const whereClause = whereConditions.length > 0
+      ? `WHERE ${whereConditions.join(' AND ')}`
       : '';
 
     // Подсчёт
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         t.name as tour_name
       FROM reviews r
       LEFT JOIN users u ON r.user_id = u.id
-      LEFT JOIN tours t ON r.tour_id = t.id
+      LEFT JOIN operator_tours t ON r.tour_id = t.id
       ${whereClause}
       ORDER BY r.${sortBy} ${sortOrder}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
@@ -122,6 +122,5 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<null>, { status: 500 });
   }
 }
-
 
 

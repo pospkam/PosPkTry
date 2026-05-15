@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
 import { z } from 'zod';
-import { pool } from '@/lib/database';
+import { pool } from '@/lib/db-pool';
 import { hashPassword } from '@/lib/auth/password';
 import { createRateLimiter, getClientIp } from '@/lib/rate-limit';
 

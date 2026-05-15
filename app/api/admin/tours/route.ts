@@ -18,16 +18,16 @@ export async function GET(request: NextRequest) {
     }
 
     const result = await query<TourAdminRow>(`
-      SELECT 
+      SELECT
         t.*,
         p.name as operator_name,
         array_agg(DISTINCT a.url) as images,
         COUNT(DISTINCT b.id) as bookings_count
-      FROM tours t
+      FROM operator_tours t
       LEFT JOIN partners p ON t.operator_id = p.id
       LEFT JOIN tour_assets ta ON t.id = ta.tour_id
       LEFT JOIN assets a ON ta.asset_id = a.id
-      LEFT JOIN bookings b ON t.id = b.tour_id
+      LEFT JOIN operator_bookings b ON t.id = b.operator_tour_id
       GROUP BY t.id, p.id
       ORDER BY t.created_at DESC
       LIMIT 500

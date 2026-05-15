@@ -53,13 +53,13 @@ export async function GET(request: NextRequest) {
     let paramIndex = 2;
 
     if (status && status !== 'all') {
-      whereConditions.push(`b.status = $${paramIndex}`);
+      whereConditions.push(`b.booking_status = $${paramIndex}`);
       queryParams.push(status);
       paramIndex++;
     }
 
     if (tourId) {
-      whereConditions.push(`b.tour_id = $${paramIndex}`);
+      whereConditions.push(`b.operator_tour_id = $${paramIndex}`);
       queryParams.push(tourId);
       paramIndex++;
     }
@@ -75,8 +75,8 @@ export async function GET(request: NextRequest) {
     // Подсчёт
     const countQuery = `
       SELECT COUNT(*) as total
-      FROM bookings b
-      JOIN tours t ON b.tour_id = t.id
+      FROM operator_bookings b
+      JOIN operator_tours t ON t.id = b.operator_tour_id
       JOIN users u ON b.user_id = u.id
       ${whereClause}
     `;
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     const bookingsQuery = `
       SELECT
         b.id,
-        b.tour_id,
+        b.operator_tour_id AS tour_id,
         t.name as tour_name,
         b.user_id,
         u.name as user_name,
@@ -96,14 +96,14 @@ export async function GET(request: NextRequest) {
         u.phone as user_phone,
         b.start_date as date,
         b.guests_count,
-        b.total_price,
-        b.status,
+        COALESCE(b.final_price, b.base_total_price) AS total_price,
+        b.booking_status AS status,
         b.payment_status,
         b.special_requirements as notes,
         b.created_at,
         b.updated_at
-      FROM bookings b
-      JOIN tours t ON b.tour_id = t.id
+      FROM operator_bookings b
+      JOIN operator_tours t ON t.id = b.operator_tour_id
       JOIN users u ON b.user_id = u.id
       ${whereClause}
       ORDER BY b.${sortBy} ${sortOrder}

@@ -89,9 +89,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         COUNT(*) as pending_count,
         COALESCE(SUM(amount * $1::numeric), 0) as pending_amount
        FROM payments p
-       JOIN bookings b ON p.booking_id = b.id
+       JOIN operator_bookings b ON p.booking_id = b.id
        WHERE p.status = 'completed'
-         AND b.status = 'confirmed'
+         AND b.booking_status = 'confirmed'
          AND NOT EXISTS (
            SELECT 1 FROM payouts
            WHERE booking_id = b.id
@@ -113,8 +113,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         COALESCE(t.name, a.name, tr.id::text) as service_name,
         COALESCE(u.name, 'Неизвестный') as customer_name
        FROM payments p
-       LEFT JOIN bookings b ON p.booking_id = b.id AND p.booking_type = 'tour'
-       LEFT JOIN tours t ON b.tour_id = t.id
+       LEFT JOIN operator_bookings b ON p.booking_id = b.id AND p.booking_type = 'tour'
+       LEFT JOIN operator_tours t ON b.operator_tour_id = t.id
        LEFT JOIN accommodation_bookings ab ON p.booking_id = ab.id AND p.booking_type = 'accommodation'
        LEFT JOIN accommodations a ON ab.accommodation_id = a.id
        LEFT JOIN transfer_bookings tb ON p.booking_id = tb.id AND p.booking_type = 'transfer'

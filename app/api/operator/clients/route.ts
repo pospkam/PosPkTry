@@ -56,13 +56,13 @@ export async function GET(request: NextRequest) {
           u.phone,
           COUNT(b.id)::int                                                        AS total_bookings,
           COALESCE(SUM(
-            CASE WHEN b.status IN ('confirmed','completed')
-                 THEN b.total_price::numeric ELSE 0 END
+            CASE WHEN b.booking_status IN ('confirmed','completed')
+                 THEN COALESCE(b.final_price, b.base_total_price)::numeric ELSE 0 END
           ), 0)::numeric                                                          AS total_spent,
           MAX(b.created_at)                                                       AS last_booking_date
         FROM users u
-        JOIN bookings b ON b.user_id = u.id
-        JOIN tours t    ON b.tour_id = t.id
+        JOIN operator_bookings b ON b.user_id = u.id
+        JOIN operator_tours t    ON t.id = b.operator_tour_id
         WHERE t.operator_id = $1
         GROUP BY u.id, u.name, u.email, u.phone
       ),

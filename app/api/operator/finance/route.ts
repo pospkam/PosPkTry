@@ -36,13 +36,13 @@ export async function GET(request: NextRequest) {
     // Основные финансовые показатели
     const financeQuery = `
       SELECT
-        COALESCE(SUM(CASE WHEN b.status IN ('confirmed', 'completed') THEN b.total_price ELSE 0 END), 0) as total_revenue,
-        COALESCE(SUM(CASE WHEN b.status IN ('confirmed', 'completed') AND b.payment_status = 'pending' THEN b.total_price ELSE 0 END), 0) as pending_payouts,
-        COALESCE(SUM(CASE WHEN b.status = 'completed' AND b.payment_status = 'paid' THEN b.total_price ELSE 0 END), 0) as completed_payouts,
-        COALESCE(SUM(CASE WHEN b.status IN ('confirmed', 'completed') THEN b.total_price * 0.15 ELSE 0 END), 0) as commission,
-        COALESCE(SUM(CASE WHEN b.status IN ('confirmed', 'completed') THEN b.total_price * 0.85 ELSE 0 END), 0) as net_income
-      FROM bookings b
-      JOIN tours t ON b.tour_id = t.id
+        COALESCE(SUM(CASE WHEN b.booking_status IN ('confirmed', 'completed') THEN COALESCE(b.final_price, b.base_total_price) ELSE 0 END), 0) as total_revenue,
+        COALESCE(SUM(CASE WHEN b.booking_status IN ('confirmed', 'completed') AND b.payment_status = 'pending' THEN COALESCE(b.final_price, b.base_total_price) ELSE 0 END), 0) as pending_payouts,
+        COALESCE(SUM(CASE WHEN b.booking_status = 'completed' AND b.payment_status = 'paid' THEN COALESCE(b.final_price, b.base_total_price) ELSE 0 END), 0) as completed_payouts,
+        COALESCE(SUM(CASE WHEN b.booking_status IN ('confirmed', 'completed') THEN COALESCE(b.final_price, b.base_total_price) * 0.15 ELSE 0 END), 0) as commission,
+        COALESCE(SUM(CASE WHEN b.booking_status IN ('confirmed', 'completed') THEN COALESCE(b.final_price, b.base_total_price) * 0.85 ELSE 0 END), 0) as net_income
+      FROM operator_bookings b
+      JOIN operator_tours t ON t.id = b.operator_tour_id
       WHERE t.operator_id = $1
         AND b.created_at >= $2
     `;
@@ -55,13 +55,13 @@ export async function GET(request: NextRequest) {
       SELECT
         b.id,
         'booking' as type,
-        b.total_price as amount,
+        COALESCE(b.final_price, b.base_total_price) as amount,
         b.payment_status as status,
         b.created_at as date,
         CONCAT('Booking for ', t.name, ' by ', u.name) as description,
         b.id as booking_id
-      FROM bookings b
-      JOIN tours t ON b.tour_id = t.id
+      FROM operator_bookings b
+      JOIN operator_tours t ON t.id = b.operator_tour_id
       JOIN users u ON b.user_id = u.id
       WHERE t.operator_id = $1
         AND b.created_at >= $2

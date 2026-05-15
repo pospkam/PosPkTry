@@ -142,12 +142,12 @@ export async function GET(request: NextRequest) {
          td.available_slots,
          td.booked_slots,
          (td.available_slots - td.booked_slots) AS remaining_slots,
-         COALESCE(td.price_override, t.price)::text AS price,
+         COALESCE(td.price_override, t.base_price)::text AS price,
          td.min_group_size,
          td.status,
          td.notes
        FROM tour_departures td
-       JOIN tours t ON t.id = td.tour_id
+       JOIN operator_tours t ON t.id = td.tour_id
        WHERE ${conditions.join(' AND ')}
        ORDER BY td.start_date ASC`,
       queryParams as unknown[]

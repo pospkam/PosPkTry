@@ -50,17 +50,17 @@ export async function GET(request: NextRequest) {
         WITH current_period AS (
           SELECT
             COUNT(DISTINCT b.id) as bookings_count,
-            COALESCE(SUM(b.total_price), 0) as total_revenue,
+            COALESCE(SUM(COALESCE(b.final_price, b.base_total_price)), 0) as total_revenue,
             COUNT(DISTINCT b.user_id) as unique_users
-          FROM bookings b
+          FROM operator_bookings b
           WHERE b.created_at >= $1
         ),
         previous_period AS (
           SELECT
             COUNT(DISTINCT b.id) as bookings_count,
-            COALESCE(SUM(b.total_price), 0) as total_revenue,
+            COALESCE(SUM(COALESCE(b.final_price, b.base_total_price)), 0) as total_revenue,
             COUNT(DISTINCT b.user_id) as unique_users
-          FROM bookings b
+          FROM operator_bookings b
           WHERE b.created_at >= $2 AND b.created_at < $1
         ),
         users_stats AS (
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
         ),
         conversion AS (
           SELECT COUNT(DISTINCT user_id) as users_with_bookings
-          FROM bookings
+          FROM operator_bookings
           WHERE created_at >= $1
         )
         SELECT
@@ -143,8 +143,8 @@ export async function GET(request: NextRequest) {
     try {
       const revenueChartResult = await query<RevenueChartRow>(
         `SELECT DATE_TRUNC('month', created_at) as month,
-                COALESCE(SUM(total_price), 0) as revenue
-         FROM bookings
+                COALESCE(SUM(COALESCE(final_price, base_total_price)), 0) as revenue
+         FROM operator_bookings
          WHERE created_at >= DATE_TRUNC('month', NOW()) - INTERVAL '5 months'
          GROUP BY month ORDER BY month`,
         []
@@ -165,8 +165,8 @@ export async function GET(request: NextRequest) {
       };
       const categoryResult = await query<CategoryCountRow>(
         `SELECT COALESCE(p.category, 'other') as category, COUNT(b.id) as count
-         FROM bookings b
-         LEFT JOIN tours t ON b.tour_id = t.id
+         FROM operator_bookings b
+         LEFT JOIN operator_tours t ON b.operator_tour_id = t.id
          LEFT JOIN partners p ON t.operator_id = p.id
          WHERE b.created_at >= $1
          GROUP BY p.category ORDER BY count DESC`,
@@ -196,9 +196,9 @@ export async function GET(request: NextRequest) {
       const topToursResult = await query<TopTourRow>(
         `SELECT t.id, t.title,
                 COUNT(b.id) as bookings,
-                COALESCE(SUM(b.total_price), 0) as revenue
-         FROM tours t
-         LEFT JOIN bookings b ON t.id = b.tour_id AND b.created_at >= $1
+                COALESCE(SUM(COALESCE(b.final_price, b.base_total_price)), 0) as revenue
+         FROM operator_tours t
+         LEFT JOIN operator_bookings b ON t.id = b.operator_tour_id AND b.created_at >= $1
          WHERE t.is_active = true
          GROUP BY t.id, t.title
          ORDER BY bookings DESC, revenue DESC
@@ -222,8 +222,8 @@ export async function GET(request: NextRequest) {
         `(SELECT b.id, 'booking' as type, 'Новое бронирование' as title,
                 t.title as description, b.created_at as timestamp,
                 u.id as user_id, u.email as user_name, NULL as user_avatar
-         FROM bookings b
-         JOIN tours t ON b.tour_id = t.id
+         FROM operator_bookings b
+         JOIN operator_tours t ON b.operator_tour_id = t.id
          JOIN users u ON b.user_id = u.id
          WHERE b.created_at >= NOW() - INTERVAL '24 hours')
         UNION ALL
@@ -269,7 +269,7 @@ export async function GET(request: NextRequest) {
     } catch { /* 0 */ }
     try {
       const ptResult = await query<TotalRow>(
-        `SELECT COUNT(*) as total FROM tours WHERE is_active = false`,
+        `SELECT COUNT(*) as total FROM operator_tours WHERE is_active = false`,
         []
       );
       pendingTours = parseInt(ptResult.rows[0]?.total ?? '0', 10);

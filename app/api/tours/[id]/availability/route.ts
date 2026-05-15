@@ -38,8 +38,8 @@ export async function GET(
 
     // Проверяем существование тура
     const tourQuery = `
-      SELECT id, name, max_group_size, min_group_size, price, is_active
-      FROM tours
+      SELECT id, title AS name, max_participants AS max_group_size, min_participants AS min_group_size, base_price AS price, is_active
+      FROM operator_tours
       WHERE id = $1
     `;
     const tourResult = await query<TourCheckRow>(tourQuery, [id]);
@@ -71,13 +71,13 @@ export async function GET(
       ),
       booking_counts AS (
         SELECT
-          DATE(b.start_date) as booking_date,
-          COALESCE(SUM(b.guests_count), 0) as booked_count
-        FROM bookings b
-        WHERE b.tour_id = $3
-          AND b.status IN ('confirmed', 'pending')
-          AND DATE(b.start_date) BETWEEN $1 AND $2
-        GROUP BY DATE(b.start_date)
+          DATE(b.booking_date) as booking_date,
+          COALESCE(SUM(b.participants), 0) as booked_count
+        FROM operator_bookings b
+        WHERE b.operator_tour_id = $3
+          AND b.booking_status IN ('confirmed', 'new')
+          AND DATE(b.booking_date) BETWEEN $1 AND $2
+        GROUP BY DATE(b.booking_date)
       )
       SELECT
         ds.date::text,

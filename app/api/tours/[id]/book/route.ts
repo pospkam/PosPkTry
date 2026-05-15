@@ -68,14 +68,14 @@ export async function POST(
     const tourCheckResult = await query<TourBookCheckRow>(
       `SELECT
         t.id,
-        t.name,
-        t.price,
-        t.max_group_size,
-        t.min_group_size,
+        t.title AS name,
+        t.base_price AS price,
+        t.max_participants AS max_group_size,
+        t.min_participants AS min_group_size,
         t.is_active,
         p.name as operator_name,
-        p.email as operator_email
-      FROM tours t
+        p.contact->>'email' as operator_email
+      FROM operator_tours t
       JOIN partners p ON t.operator_id = p.id
       WHERE t.id = $1 AND t.is_active = true`,
       [tourId]
@@ -114,10 +114,10 @@ export async function POST(
     // Проверяем доступность на выбранную дату
     const availabilityCheck = await query<{ bookings: string }>(
       `SELECT COUNT(*) as bookings
-       FROM bookings
-       WHERE tour_id = $1
-         AND DATE(start_date) = $2
-         AND status NOT IN ('cancelled')`,
+       FROM operator_bookings
+       WHERE operator_tour_id = $1
+         AND DATE(booking_date) = $2
+         AND booking_status NOT IN ('cancelled')`,
       [tourId, date]
     );
 
@@ -141,33 +141,29 @@ export async function POST(
 
     // Создаем бронирование
     const bookingResult = await query(
-      `INSERT INTO bookings (
-        user_id,
-        tour_id,
-        start_date,
-        end_date,
-        guests_count,
-        total_price,
-        currency,
-        status,
+      `INSERT INTO operator_bookings (
+        operator_tour_id,
+        booking_date,
+        participants,
+        base_total_price,
+        booking_status,
         payment_status,
         special_requests,
+        metadata,
         created_at,
         updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, NOW(), NOW())
       RETURNING id`,
       [
-        userId,
         tourId,
         date,
-        date, // Для однодневных туров start_date = end_date
         totalParticipants,
         totalPrice,
-        'RUB',
-        'pending', // статус
+        'new', // booking_status
         'pending', // payment_status
         specialRequirements || null,
+        JSON.stringify({ user_id: userId, currency: 'RUB' }),
       ]
     );
 

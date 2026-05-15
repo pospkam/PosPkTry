@@ -50,10 +50,10 @@ export async function GET(request: NextRequest) {
          td.available_slots,
          td.booked_slots,
          (td.available_slots - td.booked_slots) AS remaining,
-         COALESCE(td.price_override, t.price)::text AS price,
+         COALESCE(td.price_override, t.base_price)::text AS price,
          td.status
        FROM tour_departures td
-       JOIN tours t ON t.id = td.tour_id
+       JOIN operator_tours t ON t.id = td.tour_id
        WHERE td.tour_id = $1
          AND td.start_date >= $2
          AND td.start_date <= $3

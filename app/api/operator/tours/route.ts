@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     // Подсчёт
     const countQuery = `
       SELECT COUNT(*) as count
-      FROM tours t
+      FROM operator_tours t
       ${whereClause}
     `;
 
@@ -121,11 +121,11 @@ export async function GET(request: NextRequest) {
         kr.lat       AS route_lat,
         kr.lng       AS route_lng,
         COALESCE(COUNT(DISTINCT b.id), 0) as bookings_count,
-        COALESCE(SUM(CASE WHEN b.status IN ('confirmed', 'completed') THEN b.total_price ELSE 0 END), 0) as total_revenue,
+        COALESCE(SUM(CASE WHEN b.booking_status IN ('confirmed', 'completed') THEN COALESCE(b.final_price, b.base_total_price) ELSE 0 END), 0) as total_revenue,
         ARRAY_AGG(DISTINCT a.url) FILTER (WHERE a.url IS NOT NULL) as images
-      FROM tours t
+      FROM operator_tours t
       LEFT JOIN kamchatka_routes kr ON t.route_id = kr.id
-      LEFT JOIN bookings b ON t.id = b.tour_id
+      LEFT JOIN operator_bookings b ON t.id = b.operator_tour_id
       LEFT JOIN tour_images ti ON t.id = ti.tour_id
       LEFT JOIN assets a ON ti.asset_id = a.id
       ${whereClause}
@@ -288,7 +288,7 @@ export async function POST(request: NextRequest) {
 
     // === СОЗДАНИЕ ТУРА ===
     const insertQuery = `
-      INSERT INTO tours (
+      INSERT INTO operator_tours (
         operator_id,
         name,
         slug,

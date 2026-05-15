@@ -80,12 +80,12 @@ export async function GET(request: NextRequest) {
         COUNT(DISTINCT t.id) as total_tours,
         COUNT(DISTINCT CASE WHEN t.is_active THEN t.id END) as active_tours,
         COUNT(DISTINCT b.id) as total_bookings,
-        COALESCE(SUM(CASE WHEN b.payment_status = 'paid' THEN b.total_price ELSE 0 END), 0) as total_revenue,
+        COALESCE(SUM(CASE WHEN b.payment_status = 'paid' THEN COALESCE(b.final_price, b.base_total_price) ELSE 0 END), 0) as total_revenue,
         COALESCE(AVG(r.rating), 0) as avg_rating,
         COUNT(DISTINCT r.id) as total_reviews
       FROM partners p
-      LEFT JOIN tours t ON p.id = t.operator_id
-      LEFT JOIN bookings b ON t.id = b.tour_id
+      LEFT JOIN operator_tours t ON p.id = t.operator_id
+      LEFT JOIN operator_bookings b ON t.id = b.operator_tour_id
       LEFT JOIN reviews r ON t.id = r.tour_id
       WHERE p.user_id = $1`,
       [userId]

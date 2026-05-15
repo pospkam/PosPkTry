@@ -37,8 +37,8 @@ export async function POST(
 
     // Проверяем что тур принадлежит оператору
     const tourResult = await query<OpTourPublishRow>(
-      `SELECT id, name, description, price, is_active, operator_id 
-       FROM tours WHERE id = $1`,
+      `SELECT id, name, description, price, is_active, operator_id
+       FROM operator_tours WHERE id = $1`,
       [id]
     );
 
@@ -90,7 +90,7 @@ export async function POST(
 
     // Публикуем тур
     await query(
-      `UPDATE tours SET is_active = true, updated_at = NOW() WHERE id = $1`,
+      `UPDATE operator_tours SET is_active = true, updated_at = NOW() WHERE id = $1`,
       [id]
     );
 
