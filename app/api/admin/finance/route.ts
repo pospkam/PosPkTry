@@ -1,170 +1,166 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
-import { ApiResponse } from '@/types';
 import { requireAdmin } from '@/lib/auth/middleware';
+import { query } from '@/lib/database';
 import {
-  FinanceMetricsRow,
-  DailyFinanceRow,
-  RevenueByTypeRow,
-  PendingPayoutsRow,
-  RecentTransactionRow,
+  FinanceMetricsRow, DailyFinanceRow, RevenueByTypeRow,
+  PendingPayoutsRow, RecentTransactionRow, PayoutAdminRow, PayoutStatsRow, PayoutCreateRow,
 } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
-/** Ставка комиссии платформы. Берётся из env, fallback 15% */
-const PLATFORM_COMMISSION_RATE = Math.max(
-  0,
-  Math.min(1, parseFloat(process.env.PLATFORM_COMMISSION_RATE ?? '0.15'))
-);
-
-const ALLOWED_BOOKING_TYPES = new Set(['all', 'tours', 'accommodations', 'transfers']);
-
-/**
- * GET /api/admin/finance - Финансовая аналитика для Admin Panel
- */
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(request: NextRequest) {
   try {
-    const userOrResponse = await requireAdmin(request);
-    if (userOrResponse instanceof NextResponse) return userOrResponse;
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
 
     const { searchParams } = new URL(request.url);
+    const tab = searchParams.get('tab') || 'overview';
 
-    // Whitelist period: только положительное целое число (1–365)
-    const rawPeriod = searchParams.get('period') ?? '30';
-    const periodDays = Math.max(1, Math.min(365, parseInt(rawPeriod, 10) || 30));
+    if (tab === 'payouts') {
+      const [payoutsResult, statsResult] = await Promise.all([
+        query<PayoutAdminRow>(`
+          SELECT
+            py.id,
+            py.partner_id,
+            p.name as partner_name,
+            p.contact->>'email' as partner_email,
+            py.booking_id,
+            'tour' as booking_type,
+            t.title as service_name,
+            py.amount,
+            py.currency,
+            py.status,
+            py.created_at,
+            py.updated_at as completed_at,
+            NULL::text as failure_reason
+          FROM payouts py
+          JOIN partners p ON py.partner_id = p.id
+          LEFT JOIN operator_bookings b ON py.booking_id = b.id
+          LEFT JOIN operator_tours t ON t.id = b.operator_tour_id
+          ORDER BY py.created_at DESC
+          LIMIT 50
+        `),
+        query<PayoutStatsRow>(`
+          SELECT
+            COUNT(*)::text as total_payouts,
+            COUNT(*) FILTER (WHERE status = 'completed')::text as completed_payouts,
+            COUNT(*) FILTER (WHERE status = 'pending')::text as pending_payouts,
+            COALESCE(SUM(amount) FILTER (WHERE status = 'completed'), 0)::text as total_paid,
+            COALESCE(SUM(amount) FILTER (WHERE status = 'pending'), 0)::text as pending_amount
+          FROM payouts
+        `),
+      ]);
 
-    // Whitelist type: только допустимые значения — SQL injection prevention
-    const rawType = searchParams.get('type') ?? 'all';
-    const type = ALLOWED_BOOKING_TYPES.has(rawType) ? rawType : 'all';
-    const filterByType = type !== 'all';
+      return NextResponse.json({
+        success: true,
+        data: {
+          payouts: payoutsResult.rows,
+          stats: statsResult.rows[0],
+        },
+      });
+    }
 
-    // Основные метрики
-    const metricsResult = await query<FinanceMetricsRow>(
-      `SELECT
-        COUNT(*) as total_transactions,
-        COALESCE(SUM(amount), 0) as total_revenue,
-        COALESCE(AVG(amount), 0) as avg_transaction,
-        COUNT(DISTINCT user_id) as unique_customers
-       FROM payments
-       WHERE status = 'completed'
-         AND created_at >= NOW() - ($1 * INTERVAL '1 day')
-         ${filterByType ? 'AND booking_type = $2' : ''}`,
-      filterByType ? [periodDays, type] : [periodDays]
-    );
-    const metrics = metricsResult.rows[0];
-
-    // Доходы по дням (последние 30 дней)
-    const dailyRevenueResult = await query<DailyFinanceRow>(
-      `SELECT
-        DATE(created_at) as date,
-        COUNT(*) as transactions,
-        COALESCE(SUM(amount), 0) as revenue
-       FROM payments
-       WHERE status = 'completed'
-         AND created_at >= NOW() - INTERVAL '30 days'
-         ${filterByType ? 'AND booking_type = $1' : ''}
-       GROUP BY DATE(created_at)
-       ORDER BY date DESC`,
-      filterByType ? [type] : []
-    );
-
-    // Доходы по типам услуг
-    const revenueByTypeResult = await query<RevenueByTypeRow>(
-      `SELECT
-        booking_type,
-        COUNT(*) as transactions,
-        COALESCE(SUM(amount), 0) as revenue
-       FROM payments
-       WHERE status = 'completed'
-         AND created_at >= NOW() - ($1 * INTERVAL '1 day')
-       GROUP BY booking_type
-       ORDER BY revenue DESC`,
-      [periodDays]
-    );
-
-    // Выплаты партнерам (ожидающие)
-    const pendingPayoutsResult = await query<PendingPayoutsRow>(
-      `SELECT
-        COUNT(*) as pending_count,
-        COALESCE(SUM(amount * $1::numeric), 0) as pending_amount
-       FROM payments p
-       JOIN bookings b ON p.booking_id = b.id
-       WHERE p.status = 'completed'
-         AND b.status = 'confirmed'
-         AND NOT EXISTS (
-           SELECT 1 FROM payouts
-           WHERE booking_id = b.id
-           AND status = 'completed'
-         )`,
-      [PLATFORM_COMMISSION_RATE]
-    );
-    const pendingPayouts = pendingPayoutsResult.rows[0];
-
-    // Недавние транзакции
-    const recentTransactionsResult = await query<RecentTransactionRow>(
-      `SELECT
-        p.id,
-        p.amount,
-        p.currency,
-        p.status,
-        p.created_at,
-        p.booking_type,
-        COALESCE(t.name, a.name, tr.id::text) as service_name,
-        COALESCE(u.name, 'Неизвестный') as customer_name
-       FROM payments p
-       LEFT JOIN bookings b ON p.booking_id = b.id AND p.booking_type = 'tour'
-       LEFT JOIN tours t ON b.tour_id = t.id
-       LEFT JOIN accommodation_bookings ab ON p.booking_id = ab.id AND p.booking_type = 'accommodation'
-       LEFT JOIN accommodations a ON ab.accommodation_id = a.id
-       LEFT JOIN transfer_bookings tb ON p.booking_id = tb.id AND p.booking_type = 'transfer'
-       LEFT JOIN transfers tr ON tb.transfer_id = tr.id
-       LEFT JOIN users u ON p.user_id = u.id
-       ORDER BY p.created_at DESC
-       LIMIT 20`
-    );
+    const [metrics, dailyRevenue, revenueByType, pendingPayouts, recentTransactions] =
+      await Promise.all([
+        query<FinanceMetricsRow>(`
+          SELECT
+            COUNT(*)::text as total_transactions,
+            COALESCE(SUM(amount), 0)::text as total_revenue,
+            COALESCE(AVG(amount), 0)::text as avg_transaction,
+            COUNT(DISTINCT user_id)::text as unique_customers
+          FROM payments
+          WHERE status = 'completed'
+        `),
+        query<DailyFinanceRow>(`
+          SELECT
+            DATE(created_at) as date,
+            COUNT(*)::text as transactions,
+            COALESCE(SUM(amount), 0)::text as revenue
+          FROM payments
+          WHERE status = 'completed'
+            AND created_at >= NOW() - INTERVAL '30 days'
+          GROUP BY DATE(created_at)
+          ORDER BY date ASC
+        `),
+        query<RevenueByTypeRow>(`
+          SELECT
+            booking_type,
+            COUNT(*)::text as transactions,
+            COALESCE(SUM(amount), 0)::text as revenue
+          FROM payments
+          WHERE status = 'completed'
+          GROUP BY booking_type
+        `),
+        query<PendingPayoutsRow>(`
+          SELECT
+            COUNT(*)::text as pending_count,
+            COALESCE(SUM(amount), 0)::text as pending_amount
+          FROM payouts
+          WHERE status = 'pending'
+        `),
+        query<RecentTransactionRow>(`
+          SELECT
+            p.id,
+            p.amount,
+            p.currency,
+            p.status,
+            p.created_at,
+            p.booking_type,
+            CASE
+              WHEN p.booking_type = 'tour' THEN t.title
+              ELSE NULL
+            END as service_name,
+            u.name as customer_name
+          FROM payments p
+          LEFT JOIN operator_bookings b ON p.booking_id = b.id AND p.booking_type = 'tour'
+          LEFT JOIN operator_tours t ON t.id = b.operator_tour_id
+          LEFT JOIN users u ON p.user_id = u.id
+          ORDER BY p.created_at DESC
+          LIMIT 20
+        `),
+      ]);
 
     return NextResponse.json({
       success: true,
       data: {
-        metrics: {
-          totalTransactions: parseInt(metrics.total_transactions),
-          totalRevenue: parseFloat(metrics.total_revenue),
-          avgTransaction: parseFloat(metrics.avg_transaction),
-          uniqueCustomers: parseInt(metrics.unique_customers),
-          period: periodDays
-        },
-        dailyRevenue: dailyRevenueResult.rows.map(row => ({
-          date: row.date,
-          transactions: parseInt(row.transactions),
-          revenue: parseFloat(row.revenue)
-        })),
-        revenueByType: revenueByTypeResult.rows.map(row => ({
-          type: row.booking_type,
-          transactions: parseInt(row.transactions),
-          revenue: parseFloat(row.revenue)
-        })),
-        pendingPayouts: {
-          count: parseInt(pendingPayouts.pending_count),
-          amount: parseFloat(pendingPayouts.pending_amount)
-        },
-        recentTransactions: recentTransactionsResult.rows.map(row => ({
-          id: row.id,
-          amount: parseFloat(row.amount),
-          currency: row.currency,
-          status: row.status,
-          createdAt: row.created_at,
-          bookingType: row.booking_type,
-          serviceName: row.service_name,
-          customerName: row.customer_name
-        }))
-      }
-    } as ApiResponse<unknown>);
-
+        metrics: metrics.rows[0],
+        dailyRevenue: dailyRevenue.rows,
+        revenueByType: revenueByType.rows,
+        pendingPayouts: pendingPayouts.rows[0],
+        recentTransactions: recentTransactions.rows,
+      },
+    });
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: 'Ошибка при получении финансовых данных'
-    } as ApiResponse<null>, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'Ошибка при получении финансовых данных', message: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
+    const body = await request.json() as { partnerId?: unknown; bookingId?: unknown; amount?: unknown; currency?: unknown; description?: unknown };
+    const { partnerId, bookingId, amount, currency, description } = body;
+
+    if (!partnerId || !bookingId || !amount) {
+      return NextResponse.json({ success: false, error: 'Обязательные поля: partnerId, bookingId, amount' }, { status: 400 });
+    }
+
+    const result = await query<PayoutCreateRow>(`
+      INSERT INTO payouts (partner_id, booking_id, amount, currency, status, description)
+      VALUES ($1, $2, $3, $4, 'pending', $5)
+      RETURNING id, status, created_at
+    `, [partnerId, bookingId, amount, currency || 'RUB', description || 'Выплата оператору']);
+
+    return NextResponse.json({ success: true, data: result.rows[0] }, { status: 201 });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: 'Ошибка при создании выплаты', message: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }

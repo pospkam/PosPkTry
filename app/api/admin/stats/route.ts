@@ -1,204 +1,80 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ApiResponse } from '@/types';
 import { requireAdmin } from '@/lib/auth/middleware';
 import { query } from '@/lib/database';
-import { monitoringService } from '@/lib/monitoring';
 import {
-  CountRow,
-  RevenueRow,
-  RoleCountRow,
-  DailyCountRow,
-  DailyRevenueRow,
-  TopTourStatsRow,
-  TopOperatorRow,
+  CountRow, RoleCountRow, DailyCountRow, DailyRevenueRow,
+  TopTourStatsRow, TopOperatorRow,
 } from '@/lib/types/db-rows';
 
-// GET /api/admin/stats - Получение статистики для админ-панели
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: NextRequest) {
   try {
     const adminOrResponse = await requireAdmin(request);
     if (adminOrResponse instanceof NextResponse) return adminOrResponse;
 
-    // Общая статистика
     const [
-      totalUsersResult,
-      totalToursResult,
-      totalBookingsResult,
-      totalRevenueResult,
-      activeTransfersResult,
-      todayBookingsResult,
-      lastMonthBookingsResult,
-      currentMonthBookingsResult,
+      totalUsers, usersByRole, newUsersToday,
+      totalBookings, bookingsByStatus, newBookingsToday, recentRevenue,
+      totalTours, activeTours,
+      topTours, topOperators,
     ] = await Promise.all([
       query<CountRow>('SELECT COUNT(*) as count FROM users'),
-      query<CountRow>('SELECT COUNT(*) as count FROM operator_tours WHERE is_active = true'),
+      query<RoleCountRow>('SELECT role, COUNT(*) as count FROM users GROUP BY role'),
+      query<CountRow>("SELECT COUNT(*) as count FROM users WHERE created_at >= NOW() - INTERVAL '24 hours'"),
       query<CountRow>('SELECT COUNT(*) as count FROM operator_bookings'),
-      query<RevenueRow>(`SELECT COALESCE(SUM(base_total_price), 0) as revenue FROM operator_bookings WHERE booking_status = 'confirmed'`),
-      query<CountRow>('SELECT COUNT(*) as count FROM transfer_bookings WHERE status = \'active\''),
-      query<CountRow>('SELECT COUNT(*) as count FROM operator_bookings WHERE DATE(created_at) = CURRENT_DATE'),
-      query<CountRow>(`
-        SELECT COUNT(*) as count
-        FROM operator_bookings
-        WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
-          AND created_at < DATE_TRUNC('month', CURRENT_DATE)
+      query<RoleCountRow>('SELECT booking_status as role, COUNT(*) as count FROM operator_bookings GROUP BY booking_status'),
+      query<CountRow>("SELECT COUNT(*) as count FROM operator_bookings WHERE created_at >= NOW() - INTERVAL '24 hours'"),
+      query<{ revenue: string }>("SELECT COALESCE(SUM(COALESCE(final_price, base_total_price)), 0)::text as revenue FROM operator_bookings WHERE booking_status = 'confirmed' AND created_at >= NOW() - INTERVAL '30 days'"),
+      query<CountRow>('SELECT COUNT(*) as count FROM operator_tours'),
+      query<CountRow>('SELECT COUNT(*) as count FROM operator_tours WHERE is_active = true'),
+      query<TopTourStatsRow>(`
+        SELECT t.id, t.title AS name, COUNT(b.id)::text as bookings
+        FROM operator_tours t
+        LEFT JOIN operator_bookings b ON b.operator_tour_id = t.id
+        GROUP BY t.id, t.title
+        ORDER BY bookings DESC LIMIT 5
       `),
-      query<CountRow>(`
-        SELECT COUNT(*) as count
-        FROM operator_bookings
-        WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE)
+      query<TopOperatorRow>(`
+        SELECT
+          p.id, p.name,
+          COALESCE(SUM(COALESCE(b.final_price, b.base_total_price)), 0)::text as revenue,
+          COUNT(b.id)::text as bookings
+        FROM partners p
+        LEFT JOIN operator_tours t ON t.operator_id = p.id
+        LEFT JOIN operator_bookings b ON b.operator_tour_id = t.id AND b.booking_status = 'confirmed'
+        WHERE p.category = 'operator'
+        GROUP BY p.id, p.name
+        ORDER BY revenue DESC LIMIT 5
       `),
     ]);
 
-    const lastMonthCount = parseInt(lastMonthBookingsResult.rows[0]?.count ?? '0', 10);
-    const currentMonthCount = parseInt(currentMonthBookingsResult.rows[0]?.count ?? '0', 10);
-    const monthlyGrowth = lastMonthCount > 0
-      ? Math.round(((currentMonthCount - lastMonthCount) / lastMonthCount) * 100)
-      : 0;
-
-    const stats = {
-      totalUsers: parseInt(totalUsersResult.rows[0]?.count ?? '0', 10),
-      totalTours: parseInt(totalToursResult.rows[0]?.count ?? '0', 10),
-      totalBookings: parseInt(totalBookingsResult.rows[0]?.count ?? '0', 10),
-      totalRevenue: parseFloat(totalRevenueResult.rows[0]?.revenue ?? '0'),
-      activeTransfers: parseInt(activeTransfersResult.rows[0]?.count ?? '0', 10),
-      todayBookings: parseInt(todayBookingsResult.rows[0]?.count ?? '0', 10),
-      monthlyGrowth,
-
-      usersByRole: await getUsersByRole(),
-      dailyBookings: await getDailyBookings(),
-      dailyRevenue: await getDailyRevenue(),
-      topTours: await getTopTours(),
-      topOperators: await getTopOperators(),
-
-      system: {
-        uptime: Math.round(process.uptime() / 3600 * 100) / 100,
-        avgResponseTime: await getAverageResponseTime(),
-        errorRate: await getErrorRate(),
-        activeConnections: await getActiveConnections(),
+    return NextResponse.json({
+      success: true,
+      data: {
+        users: {
+          total: parseInt(totalUsers.rows[0].count),
+          byRole: Object.fromEntries(usersByRole.rows.map(r => [r.role, parseInt(r.count)])),
+          newToday: parseInt(newUsersToday.rows[0].count),
+        },
+        bookings: {
+          total: parseInt(totalBookings.rows[0].count),
+          byStatus: Object.fromEntries(bookingsByStatus.rows.map(r => [r.role, parseInt(r.count)])),
+          newToday: parseInt(newBookingsToday.rows[0].count),
+          recentRevenue: parseFloat(recentRevenue.rows[0].revenue),
+        },
+        tours: {
+          total: parseInt(totalTours.rows[0].count),
+          active: parseInt(activeTours.rows[0].count),
+        },
+        topTours: topTours.rows,
+        topOperators: topOperators.rows,
       },
-    };
-
-    return NextResponse.json({ success: true, data: stats } as ApiResponse<typeof stats>);
-
+    });
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: 'Ошибка при получении статистики' } as ApiResponse<null>,
+      { success: false, error: 'Ошибка получения статистики', message: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
-  }
-}
-
-async function getUsersByRole(): Promise<Record<string, number>> {
-  const result = await query<RoleCountRow>(`
-    SELECT role, COUNT(*) as count
-    FROM users
-    GROUP BY role
-  `);
-
-  const roleMap: Record<string, number> = {
-    tourist: 0, operator: 0, guide: 0,
-    transfer: 0, agent: 0, admin: 0,
-  };
-
-  result.rows.forEach(row => {
-    roleMap[row.role] = parseInt(row.count, 10);
-  });
-
-  return roleMap;
-}
-
-async function getDailyBookings(): Promise<number[]> {
-  const result = await query<DailyCountRow>(`
-    SELECT DATE(created_at) as date, COUNT(*) as count
-    FROM operator_bookings
-    WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'
-    GROUP BY DATE(created_at)
-    ORDER BY date ASC
-  `);
-  return result.rows.map(row => parseInt(row.count, 10));
-}
-
-async function getDailyRevenue(): Promise<number[]> {
-  const result = await query<DailyRevenueRow>(`
-    SELECT DATE(created_at) as date, COALESCE(SUM(base_total_price), 0) as revenue
-    FROM operator_bookings
-    WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'
-      AND booking_status = 'confirmed'
-    GROUP BY DATE(created_at)
-    ORDER BY date ASC
-  `);
-  return result.rows.map(row => parseFloat(row.revenue));
-}
-
-async function getTopTours(): Promise<{ id: string; name: string; bookings: number }[]> {
-  const result = await query<TopTourStatsRow>(`
-    SELECT t.id, t.name, COUNT(b.id) as bookings
-    FROM operator_tours t
-    LEFT JOIN operator_bookings b ON t.id = b.operator_tour_id
-    GROUP BY t.id, t.name
-    ORDER BY bookings DESC
-    LIMIT 5
-  `);
-  return result.rows.map(row => ({
-    id: row.id,
-    name: row.name,
-    bookings: parseInt(row.bookings, 10),
-  }));
-}
-
-async function getTopOperators(): Promise<{ id: string; name: string; revenue: number; bookings: number }[]> {
-  const result = await query<TopOperatorRow>(`
-    SELECT
-      p.id,
-      p.name,
-      COUNT(b.id) as bookings,
-      COALESCE(SUM(b.base_total_price), 0) as revenue
-    FROM partners p
-    LEFT JOIN operator_tours t ON p.id = t.operator_id
-    LEFT JOIN operator_bookings b ON t.id = b.operator_tour_id AND b.booking_status = 'confirmed'
-    WHERE p.category = 'operator'
-    GROUP BY p.id, p.name
-    ORDER BY revenue DESC
-    LIMIT 5
-  `);
-  return result.rows.map(row => ({
-    id: row.id,
-    name: row.name,
-    revenue: parseFloat(row.revenue),
-    bookings: parseInt(row.bookings, 10),
-  }));
-}
-
-async function getAverageResponseTime(): Promise<number> {
-  try {
-    // monitoringService.getMetrics() returns system snapshot, not per-request metrics
-    const systemMetrics = monitoringService.getMetrics();
-    void systemMetrics; // available but per-request timing not tracked here
-    return 0;
-  } catch {
-    return 0;
-  }
-}
-
-async function getErrorRate(): Promise<number> {
-  try {
-    const systemMetrics = monitoringService.getMetrics();
-    void systemMetrics;
-    return 0;
-  } catch {
-    return 0;
-  }
-}
-
-async function getActiveConnections(): Promise<number> {
-  try {
-    const result = await query<CountRow>(`
-      SELECT COUNT(*) as count
-      FROM sessions
-      WHERE expires_at > NOW()
-    `);
-    return parseInt(result.rows[0]?.count ?? '0', 10);
-  } catch {
-    return 0;
   }
 }
