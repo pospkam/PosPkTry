@@ -28,7 +28,7 @@ export async function POST(
               u.name as user_name, t.name as tour_name
        FROM reviews r
        LEFT JOIN users u ON r.user_id = u.id
-       LEFT JOIN tours t ON r.tour_id = t.id
+       LEFT JOIN operator_tours t ON r.tour_id = t.id
        WHERE r.id = $1`,
       [id]
     );
