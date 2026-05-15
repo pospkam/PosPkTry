@@ -1,165 +1,88 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
-import { ApiResponse, PaginatedResponse } from '@/types';
-import { CountRow } from '@/lib/types/db-rows';
+import { query } from '@/lib/database';
+import { ApiResponse } from '@/types';
+import { TourAdminRow, CountRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
-const ALLOWED_SORT_FIELDS = new Set(['created_at', 'updated_at', 'name', 'price', 'rating', 'review_count', 'is_active']);
 
-interface ContentTourAdminRow {
-  id: string;
-  name: string;
-  description: string;
-  difficulty: string;
-  duration: number;
-  price: string;
-  currency: string;
-  operator_id: string;
-  is_active: boolean;
-  rating: string;
-  review_count: string;
-  created_at: Date;
-  updated_at: Date;
-  operator_name: string | null;
-}
-
-interface AdminTour {
-  id: string;
-  name: string;
-  description: string;
-  difficulty: string;
-  duration: number;
-  price: number;
-  currency: string;
-  operatorId: string;
-  operatorName: string;
-  isActive: boolean;
-  rating: number;
-  reviewCount: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-/**
- * GET /api/admin/content/tours
- * Получение списка всех туров для модерации
- */
 export async function GET(request: NextRequest) {
   try {
     const adminOrResponse = await requireAdmin(request);
-    if (adminOrResponse instanceof NextResponse) {
-      return adminOrResponse;
-    }
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
     const { searchParams } = new URL(request.url);
-    
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = (page - 1) * limit;
-    
-    const status = searchParams.get('status'); // 'active', 'inactive', 'all'
+    const status = searchParams.get('status');
     const search = searchParams.get('search');
-    const requestedSortBy = searchParams.get('sortBy') || 'created_at';
-    const sortBy = ALLOWED_SORT_FIELDS.has(requestedSortBy) ? requestedSortBy : 'created_at';
-    const sortOrder = (searchParams.get('sortOrder') || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
-    // Строим WHERE условия
-    const whereConditions: string[] = [];
-    const queryParams: (string | number | boolean | null)[] = [];
+    const conditions: string[] = [];
+    const params: (string | number | boolean)[] = [];
     let paramIndex = 1;
 
     if (status === 'active') {
-      whereConditions.push(`t.is_active = true`);
+      conditions.push('t.is_active = true');
     } else if (status === 'inactive') {
-      whereConditions.push(`t.is_active = false`);
+      conditions.push('t.is_active = false');
     }
 
     if (search) {
-      whereConditions.push(`(t.name ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`);
-      queryParams.push(`%${search}%`);
+      conditions.push(`(t.title ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`);
+      params.push(`%${search}%`);
       paramIndex++;
     }
 
-    const whereClause = whereConditions.length > 0 
-      ? `WHERE ${whereConditions.join(' AND ')}` 
-      : '';
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    // Подсчёт общего количества
-    const countQuery = `
-      SELECT COUNT(*)
-      FROM operator_tours t
-      ${whereClause}
-    `;
+    const countResult = await query<CountRow>(
+      `SELECT COUNT(*) as count FROM operator_tours t ${whereClause}`,
+      params
+    );
 
-    const countResult = await query<CountRow>(countQuery, queryParams);
-    const total = parseInt(countResult.rows[0].count);
-
-    // Получение туров
-    const toursQuery = `
-      SELECT
-        t.id,
-        t.name,
-        t.description,
-        t.difficulty,
-        t.duration,
-        t.price,
-        t.currency,
-        t.operator_id,
-        t.is_active,
-        t.rating,
-        t.review_count,
-        t.created_at,
-        t.updated_at,
-        p.name as operator_name
-      FROM operator_tours t
-      LEFT JOIN partners p ON t.operator_id = p.id
-      ${whereClause}
-      ORDER BY t.${sortBy} ${sortOrder}
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `;
-
-    queryParams.push(limit, offset);
-    const toursResult = await query<ContentTourAdminRow>(toursQuery, queryParams);
-
-    const tours: AdminTour[] = toursResult.rows.map(row => ({
-      id: row.id,
-      name: row.name,
-      description: row.description,
-      difficulty: row.difficulty,
-      duration: row.duration,
-      price: parseFloat(row.price),
-      currency: row.currency,
-      operatorId: row.operator_id,
-      operatorName: row.operator_name || 'Неизвестно',
-      isActive: row.is_active,
-      rating: parseFloat(row.rating) || 0,
-      reviewCount: parseInt(row.review_count) || 0,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at)
-    }));
-
-    const response: PaginatedResponse<AdminTour> = {
-      data: tours,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
-    };
+    const toursResult = await query<TourAdminRow>(
+      `SELECT
+         t.id,
+         t.title AS name,
+         t.description,
+         t.difficulty,
+         t.duration_days AS duration,
+         t.base_price AS price,
+         t.currency,
+         t.operator_id,
+         t.is_active,
+         t.rating,
+         t.reviews_count AS review_count,
+         t.created_at,
+         t.updated_at,
+         p.name as operator_name,
+         t.images,
+         COALESCE((SELECT COUNT(*) FROM operator_bookings b WHERE b.operator_tour_id = t.id)::text, '0') as bookings_count
+       FROM operator_tours t
+       LEFT JOIN partners p ON t.operator_id = p.id
+       ${whereClause}
+       ORDER BY t.created_at DESC
+       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+      [...params, limit, offset]
+    );
 
     return NextResponse.json({
       success: true,
-      data: response
-    } as ApiResponse<PaginatedResponse<AdminTour>>);
-
+      data: {
+        tours: toursResult.rows,
+        pagination: {
+          page,
+          limit,
+          total: parseInt(countResult.rows[0].count),
+          totalPages: Math.ceil(parseInt(countResult.rows[0].count) / limit),
+        },
+      },
+    } as ApiResponse<unknown>);
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to fetch tours',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    } as ApiResponse<null>, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'Ошибка при получении туров' } as ApiResponse<null>,
+      { status: 500 }
+    );
   }
 }
-
-

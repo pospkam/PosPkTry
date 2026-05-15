@@ -1,173 +1,106 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
+import { query } from '@/lib/database';
 import { ApiResponse } from '@/types';
 import { TourUpdateRow } from '@/lib/types/db-rows';
-import { z } from 'zod';
-
-const UpdateTourSchema = z.object({
-  name: z.string().min(1, 'Название тура не может быть пустым').optional(),
-  description: z.string().optional(),
-  isActive: z.boolean().optional(),
-  price: z.number({ coerce: true }).nonnegative('Цена не может быть отрицательной').optional(),
-}).refine(
-  data => data.name !== undefined || data.description !== undefined || data.isActive !== undefined || data.price !== undefined,
-  'Необходимо указать хотя бы одно поле для обновления'
-);
 
 export const dynamic = 'force-dynamic';
 
-/**
- * PUT /api/admin/content/tours/[id]
- * Обновление тура (модерация, активация/деактивация)
- */
-export async function PUT(
+export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const adminOrResponse = await requireAdmin(request);
-    if (adminOrResponse instanceof NextResponse) {
-      return adminOrResponse;
-    }
-    const { id } = await context.params;
-    const body = await request.json();
-    const parsed = UpdateTourSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({
-        success: false,
-        error: parsed.error.issues[0]?.message || 'Некорректные данные'
-      } as ApiResponse<null>, { status: 400 });
-    }
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
 
-    // Проверяем существование тура
-    const checkQuery = 'SELECT id FROM operator_tours WHERE id = $1';
-    const checkResult = await query(checkQuery, [id]);
+    const { id } = await params;
 
-    if (checkResult.rows.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Tour not found'
-      } as ApiResponse<null>, { status: 404 });
+    const result = await query(
+      `SELECT t.*, p.name as operator_name
+       FROM operator_tours t
+       LEFT JOIN partners p ON t.operator_id = p.id
+       WHERE t.id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({ success: false, error: 'Тур не найден' }, { status: 404 });
     }
 
-    // Строим динамический UPDATE
+    return NextResponse.json({ success: true, data: result.rows[0] } as ApiResponse<unknown>);
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: 'Ошибка при получении тура' } as ApiResponse<null>,
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const adminOrResponse = await requireAdmin(request);
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
+
+    const { id } = await params;
+    const body = await request.json() as Record<string, unknown>;
+
+    const allowedFields = ['title', 'description', 'category', 'difficulty', 'base_price', 'is_active'];
     const updates: string[] = [];
     const values: unknown[] = [];
     let paramIndex = 1;
 
-    if (parsed.data.name !== undefined) {
-      updates.push(`name = $${paramIndex}`);
-      values.push(parsed.data.name);
-      paramIndex++;
-    }
-
-    if (parsed.data.description !== undefined) {
-      updates.push(`description = $${paramIndex}`);
-      values.push(parsed.data.description);
-      paramIndex++;
-    }
-
-    if (parsed.data.isActive !== undefined) {
-      updates.push(`is_active = $${paramIndex}`);
-      values.push(parsed.data.isActive);
-      paramIndex++;
-    }
-
-    if (parsed.data.price !== undefined) {
-      updates.push(`price = $${paramIndex}`);
-      values.push(parsed.data.price);
-      paramIndex++;
+    for (const field of allowedFields) {
+      if (field in body) {
+        updates.push(`${field} = $${paramIndex}`);
+        values.push(body[field]);
+        paramIndex++;
+      }
     }
 
     if (updates.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'No fields to update'
-      } as ApiResponse<null>, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Нет данных для обновления' }, { status: 400 });
     }
 
-    updates.push(`updated_at = NOW()`);
     values.push(id);
+    const result = await query<TourUpdateRow>(
+      `UPDATE operator_tours SET ${updates.join(', ')}, updated_at = NOW() WHERE id = $${paramIndex} RETURNING id, title AS name, is_active, updated_at`,
+      values
+    );
 
-    const updateQuery = `
-      UPDATE operator_tours
-      SET ${updates.join(', ')}
-      WHERE id = $${paramIndex}
-      RETURNING id, name, is_active, updated_at
-    `;
+    if (result.rows.length === 0) {
+      return NextResponse.json({ success: false, error: 'Тур не найден' }, { status: 404 });
+    }
 
-    const result = await query<TourUpdateRow>(updateQuery, values);
-    const updatedTour = result.rows[0];
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: updatedTour.id,
-        name: updatedTour.name,
-        isActive: updatedTour.is_active,
-        updatedAt: new Date(updatedTour.updated_at)
-      },
-      message: 'Tour updated successfully'
-    });
-
+    return NextResponse.json({ success: true, data: result.rows[0] } as ApiResponse<unknown>);
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to update tour',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    } as ApiResponse<null>, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'Ошибка при обновлении тура' } as ApiResponse<null>,
+      { status: 500 }
+    );
   }
 }
 
-/**
- * DELETE /api/admin/content/tours/[id]
- * Удаление тура (или архивация)
- */
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const adminOrResponse = await requireAdmin(request);
-    if (adminOrResponse instanceof NextResponse) {
-      return adminOrResponse;
-    }
-    const { id } = await context.params;
+    if (adminOrResponse instanceof NextResponse) return adminOrResponse;
 
-    // Проверяем существование
-    const checkQuery = 'SELECT id FROM operator_tours WHERE id = $1';
-    const checkResult = await query(checkQuery, [id]);
+    const { id } = await params;
 
-    if (checkResult.rows.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Tour not found'
-      } as ApiResponse<null>, { status: 404 });
-    }
+    await query('UPDATE operator_tours SET is_active = false, updated_at = NOW() WHERE id = $1', [id]);
 
-    // Вместо удаления - деактивируем (мягкое удаление)
-    const archiveQuery = `
-      UPDATE operator_tours
-      SET is_active = false, updated_at = NOW()
-      WHERE id = $1
-      RETURNING id
-    `;
-
-    await query(archiveQuery, [id]);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Tour archived successfully'
-    });
-
+    return NextResponse.json({ success: true, message: 'Тур деактивирован' });
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to archive tour',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    } as ApiResponse<null>, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'Ошибка при удалении тура' } as ApiResponse<null>,
+      { status: 500 }
+    );
   }
 }
-
-

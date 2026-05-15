@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database';
 import { requireAdmin } from '@/lib/auth/middleware';
+import { query } from '@/lib/database';
 import { callAIWithModelDirect } from '@/lib/ai/providers';
-import { getModelForAgent } from '@/lib/ai/agent-models';
-import type { ChatMessage } from '@/lib/ai/prompts';
-import type { ReviewForAnalysisRow } from '@/lib/types/db-rows';
+import { ReviewForAnalysisRow } from '@/lib/types/db-rows';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * POST /api/admin/content/reviews/[id]/analyze
- * AI analysis of a review — sentiment, spam probability, summary
- */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -22,89 +16,41 @@ export async function POST(
 
     const { id } = await params;
 
-    // Fetch review with context
     const result = await query<ReviewForAnalysisRow>(
-      `SELECT r.id, r.comment, r.rating,
-              u.name as user_name, t.name as tour_name
+      `SELECT r.id, r.comment, r.rating, u.name as user_name, t.title as tour_name
        FROM reviews r
        LEFT JOIN users u ON r.user_id = u.id
-       LEFT JOIN tours t ON r.tour_id = t.id
+       LEFT JOIN operator_tours t ON r.tour_id = t.id
        WHERE r.id = $1`,
       [id]
     );
 
     if (result.rows.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'Отзыв не найден' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Отзыв не найден' }, { status: 404 });
     }
 
     const review = result.rows[0];
 
-    // No comment → quick fallback
-    if (!review.comment?.trim()) {
-      return NextResponse.json({
-        success: true,
-        data: { sentiment: 'neutral' as const, spamProbability: 0, summary: 'Отзыв без текста' },
-      });
-    }
-
-    const prompt = `Ты — модератор платформы KamchatourHub. Проанализируй отзыв туриста и верни ТОЛЬКО JSON без пояснений.
-
-Отзыв: "${review.comment}"
-Оценка: ${review.rating}/5
-Тур: ${review.tour_name ?? 'Неизвестен'}
-Пользователь: ${review.user_name ?? 'Аноним'}
-
-Верни JSON:
-{"sentiment":"positive"|"negative"|"neutral","spamProbability":число от 0 до 1,"summary":"1-2 предложения на русском"}
-
-Признаки спама: повторы, нерелевантный контент, реклама, набор символов, копипаст.
-ТОЛЬКО JSON, без пояснений.`;
-
-    const messages: ChatMessage[] = [
-      { role: 'system', content: 'Ты — AI помощник модератора. Отвечай только JSON.', timestamp: Date.now() },
-      { role: 'user', content: prompt, timestamp: Date.now() },
+    const messages = [
+      {
+        role: 'system' as const,
+        content: 'Ты модератор туристической платформы. Проанализируй отзыв и определи: 1) тональность (позитивный/нейтральный/негативный), 2) есть ли признаки фейка или спама, 3) нарушает ли правила платформы, 4) рекомендация (одобрить/отклонить/требует проверки). Ответь в формате JSON.',
+      },
+      {
+        role: 'user' as const,
+        content: `Отзыв от ${review.user_name || 'аноним'} на тур "${review.tour_name || 'неизвестен'}": рейтинг ${review.rating}/5. Текст: "${review.comment || 'без текста'}"`,
+      },
     ];
 
-    const aiResponse = await callAIWithModelDirect(messages, getModelForAgent('content'));
-
-    // Parse AI response
-    let sentiment: 'positive' | 'negative' | 'neutral' = 'neutral';
-    let spamProbability = 0;
-    let summary = 'Не удалось проанализировать';
-
-    try {
-      // Extract JSON from response (AI might wrap in markdown code blocks)
-      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]) as {
-          sentiment?: string;
-          spamProbability?: number;
-          summary?: string;
-        };
-        if (parsed.sentiment === 'positive' || parsed.sentiment === 'negative' || parsed.sentiment === 'neutral') {
-          sentiment = parsed.sentiment;
-        }
-        if (typeof parsed.spamProbability === 'number') {
-          spamProbability = Math.max(0, Math.min(1, parsed.spamProbability));
-        }
-        if (typeof parsed.summary === 'string') {
-          summary = parsed.summary;
-        }
-      }
-    } catch {
-      // JSON parse failed — use defaults
-    }
+    const analysis = await callAIWithModelDirect(messages, 'fast');
 
     return NextResponse.json({
       success: true,
-      data: { sentiment, spamProbability, summary },
+      data: { reviewId: id, analysis },
     });
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: 'Ошибка AI анализа' },
+      { success: false, error: 'Ошибка анализа отзыва' },
       { status: 500 }
     );
   }
