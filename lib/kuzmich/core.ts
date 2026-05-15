@@ -165,6 +165,15 @@ let _tourContextCache: string = '';
 let _tourContextAt = 0;
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 мин
 
+// In-memory fallback для истории разговоров когда DB недоступна
+// Ключ: `${chatId}:${mode}`, хранит последние 20 сообщений
+const _historyFallback = new Map<string, ChatMessage[]>();
+const HISTORY_MAX = 20;
+setInterval(() => {
+  // Чистим старые чаты (>60 мин неактивности) — предотвращаем утечку памяти
+  _historyFallback.clear();
+}, 60 * 60 * 1000);
+
 // ── Bot Memory (TG / MAX — без регистрации, хранится в agent_memory) ─────────
 
 export interface BotMemory {
@@ -778,6 +787,7 @@ export function isNo(t: string)  { return NO.some(n => t.toLowerCase().includes(
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
 export async function getHistory(chatId: number, mode: string): Promise<ChatMessage[]> {
+  const key = `${chatId}:${mode}`;
   try {
     const { rows } = await pool.query<{ role: string; content: string }>(
       `SELECT role, content FROM tg_conversations
@@ -785,21 +795,34 @@ export async function getHistory(chatId: number, mode: string): Promise<ChatMess
        ORDER BY created_at DESC LIMIT 20`,
       [chatId, mode],
     );
-    return rows.reverse() as ChatMessage[];
-  } catch { return []; }
+    const msgs = rows.reverse() as ChatMessage[];
+    // Синхронизируем in-memory кэш с актуальной историей из DB
+    if (msgs.length > 0) _historyFallback.set(key, msgs);
+    return msgs;
+  } catch {
+    // DB недоступна — возвращаем in-memory историю чтобы разговор не терял контекст
+    return _historyFallback.get(key) ?? [];
+  }
 }
 
 export async function saveMsg(
   chatId: number, mode: string, role: 'user' | 'assistant', content: string,
   userId?: number | null, userName?: string | null,
 ) {
+  const key = `${chatId}:${mode}`;
+  // Всегда обновляем in-memory кэш — работает даже без DB
+  const cached = _historyFallback.get(key) ?? [];
+  cached.push({ role, content });
+  if (cached.length > HISTORY_MAX) cached.splice(0, cached.length - HISTORY_MAX);
+  _historyFallback.set(key, cached);
+
   try {
     await pool.query(
       `INSERT INTO tg_conversations (chat_id, mode, role, content, user_id, user_name, platform)
        VALUES ($1,$2,$3,$4,$5,$6,$7)`,
       [chatId, mode, role, content, userId ?? null, userName ?? null, mode === 'max' ? 'max' : 'telegram'],
     );
-  } catch { /* не блокируем */ }
+  } catch { /* не блокируем — in-memory кэш уже обновлён */ }
 }
 
 export async function findTour(keywords: string[]): Promise<TourRow | null> {
