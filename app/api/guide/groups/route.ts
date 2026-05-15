@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
         t.name as tour_name
       FROM guide_groups gg
       JOIN guide_schedule gs ON gg.schedule_id = gs.id
-      JOIN tours t ON gs.tour_id = t.id
+      JOIN operator_tours t ON gs.tour_id = t.id
       WHERE gs.guide_id = $1
       ORDER BY gs.tour_date DESC, gs.start_time DESC`,
       [guideId]

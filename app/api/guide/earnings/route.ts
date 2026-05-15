@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
         t.name as tour_name,
         gs.tour_date
       FROM guide_earnings ge
-      LEFT JOIN tours t ON ge.tour_id = t.id
+      LEFT JOIN operator_tours t ON ge.tour_id = t.id
       LEFT JOIN guide_schedule gs ON ge.schedule_id = gs.id
       WHERE ge.guide_id = $1
       ORDER BY ge.created_at DESC
