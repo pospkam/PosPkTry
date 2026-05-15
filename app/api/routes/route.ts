@@ -255,19 +255,17 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
       {
-        success: true,
+        success: false,
+        error: 'Ошибка базы данных',
+        detail: process.env.NODE_ENV === 'development' ? message : undefined,
         data: [],
-        meta: {
-          total: 0,
-          page,
-          limit,
-          pages: 0,
-        },
+        meta: { total: 0, page, limit, pages: 0 },
         degraded: true,
       },
-      { status: 200 }
+      { status: 503 }
     );
   }
 }

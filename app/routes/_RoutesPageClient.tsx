@@ -136,6 +136,7 @@ export default function RoutesPageClient() {
   const [routes,    setRoutes]    = useState<RouteItem[]>([]);
   const [meta,      setMeta]      = useState({ total: 0, pages: 1 });
   const [loading,   setLoading]   = useState(true);
+  const [dbError,   setDbError]   = useState(false);
   const [mapRoutes, setMapRoutes] = useState<MapRoute[]>([]);
   const [mapLoading, setMapLoading] = useState(false);
 
@@ -170,10 +171,14 @@ export default function RoutesPageClient() {
       const res  = await fetch(`/api/routes?${params}`);
       const json: RoutesResponse = await res.json();
       if (json.success) {
+        setDbError(false);
         setRoutes(json.data);
         setMeta({ total: json.meta.total, pages: json.meta.pages });
+      } else {
+        setDbError(true);
+        setRoutes([]);
       }
-    } catch { /* silent */ }
+    } catch { setDbError(true); }
     setLoading(false);
   }, []);
 
@@ -462,6 +467,14 @@ export default function RoutesPageClient() {
                 {Array.from({ length: LIMIT }).map((_, i) => (
                   <div key={i} className="ds-skeleton rounded-lg" style={{ aspectRatio: kind === 'place' ? '4/3' : undefined, height: kind === 'route' ? '5.5rem' : undefined }} />
                 ))}
+              </div>
+            ) : dbError ? (
+              <div className="py-24 text-center">
+                <p className="text-lg font-semibold text-[var(--danger)] mb-2">Ошибка загрузки данных</p>
+                <p className="text-sm text-[var(--text-secondary)] mb-4">База данных недоступна. Попробуйте обновить страницу.</p>
+                <button onClick={() => window.location.reload()} className="ds-btn ds-btn-secondary text-sm">
+                  Обновить
+                </button>
               </div>
             ) : routes.length === 0 ? (
               <div className="py-24 text-center">
