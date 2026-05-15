@@ -24,11 +24,13 @@ function sanitizeMalformedPostgresUrl(raw: string): string {
   return `${scheme}${encodeURIComponent(usernameRaw)}:${encodeURIComponent(passwordRaw)}@${host}:${port}/${dbPart}`;
 }
 
-// Timeweb внутри контейнера не резолвит hostname БД через DNS.
-// Маппим hostname на IP если DNS не работает в контейнере.
-// DB_HOST_IP — переменная окружения для обновления IP без передеплоя кода.
+// Timeweb переназначил БД с публичного IP на приватную сеть.
+// Маппим оба варианта (hostname и старый публичный IP) на новый приватный IP.
+// DB_HOST_IP — env var для смены IP без передеплоя кода.
+const newIp = process.env.DB_HOST_IP ?? '192.168.0.4';
 const KNOWN_HOST_MAP: Record<string, string> = {
-  '8ad609fcbfd2ad0bd069be47.twc1.net': process.env.DB_HOST_IP ?? '192.168.0.4',
+  '8ad609fcbfd2ad0bd069be47.twc1.net': newIp,
+  '94.228.112.62': newIp,
 };
 
 function resolveHost(host: string): string {
