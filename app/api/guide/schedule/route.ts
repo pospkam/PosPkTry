@@ -49,12 +49,12 @@ export async function GET(request: NextRequest) {
       SELECT 
         gs.*,
         t.title as tour_title,
-        b.status as booking_status,
+        b.booking_status as booking_status,
         ST_X(gs.location::geometry) as longitude,
         ST_Y(gs.location::geometry) as latitude
       FROM guide_schedule gs
-      LEFT JOIN tours t ON gs.tour_id = t.id
-      LEFT JOIN bookings b ON gs.booking_id = b.id
+      LEFT JOIN operator_tours t ON gs.tour_id = t.id
+      LEFT JOIN operator_bookings b ON gs.booking_id = b.id
       WHERE gs.guide_id = $1
     `;
 

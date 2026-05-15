@@ -92,7 +92,7 @@ export async function PATCH(
 
     // Проверяем состояние бронирования — нельзя принять переброс завершённого/отменённого
     const bookingResult = await query<{ total_price: string; status: string; tour_id: string }>(
-      `SELECT total_price, status, tour_id FROM bookings WHERE id = $1 LIMIT 1`,
+      `SELECT COALESCE(final_price, base_total_price) AS total_price, booking_status AS status, operator_tour_id AS tour_id FROM operator_bookings WHERE id = $1 LIMIT 1`,
       [transfer.booking_id]
     );
 
@@ -114,7 +114,7 @@ export async function PATCH(
     // Если передан targetTourId — проверяем, что тур принадлежит принимающему оператору
     if (targetTourId) {
       const tourCheck = await query<{ id: string }>(
-        `SELECT id FROM tours WHERE id = $1 AND operator_id = $2 LIMIT 1`,
+        `SELECT id FROM operator_tours WHERE id = $1 AND operator_id = $2 LIMIT 1`,
         [targetTourId, operatorId]
       );
       if (tourCheck.rows.length === 0) {
@@ -147,7 +147,7 @@ export async function PATCH(
       // 2) Переназначаем бронирование на тур оператора Б (если указан)
       if (targetTourId) {
         await client.query(
-          `UPDATE bookings SET tour_id = $2, updated_at = NOW() WHERE id = $1`,
+          `UPDATE operator_bookings SET operator_tour_id = $2, updated_at = NOW() WHERE id = $1`,
           [transfer.booking_id, targetTourId]
         );
       }

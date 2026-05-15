@@ -178,10 +178,10 @@ export async function POST(
 
     // Check if user has completed booking for this tour
     const bookingCheck = await query(
-      `SELECT id FROM bookings 
-       WHERE user_id = $1 
-       AND tour_id = $2 
-       AND status = 'completed'
+      `SELECT id FROM operator_bookings
+       WHERE metadata->>'user_id' = $1
+       AND operator_tour_id = $2
+       AND booking_status = 'completed'
        LIMIT 1`,
       [userId, tourId]
     );

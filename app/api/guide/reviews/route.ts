@@ -41,8 +41,8 @@ export async function GET(request: NextRequest) {
         t.title as tour_title
       FROM guide_reviews gr
       LEFT JOIN users u ON gr.tourist_id = u.id
-      LEFT JOIN bookings b ON gr.booking_id = b.id
-      LEFT JOIN tours t ON b.tour_id = t.id
+      LEFT JOIN operator_bookings b ON gr.booking_id = b.id
+      LEFT JOIN operator_tours t ON t.id = b.operator_tour_id
       WHERE gr.guide_id = $1 AND gr.is_public = true
     `;
 

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
         r.created_at, r.updated_at,
         t.name as tour_name
       FROM reviews r
-      LEFT JOIN tours t ON r.tour_id = t.id
+      LEFT JOIN operator_tours t ON r.tour_id = t.id
       WHERE r.user_id = $1
       ORDER BY r.created_at DESC
       LIMIT $2 OFFSET $3`,
