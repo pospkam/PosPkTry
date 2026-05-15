@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
       [userId]
     ),
     pool.query(
-      `SELECT id, status, created_at, total_price
-       FROM bookings WHERE user_id = $1
+      `SELECT id, booking_status AS status, created_at, COALESCE(final_price, base_total_price) AS total_price
+       FROM operator_bookings WHERE metadata->>'user_id' = $1
        ORDER BY created_at DESC LIMIT 200`,
       [userId]
     ),
