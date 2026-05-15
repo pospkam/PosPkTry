@@ -10,6 +10,8 @@ import BottomNav from '@/components/shared/BottomNav';
 import { AssistantButton } from '@/components/shared/AssistantButton';
 import { MarkerType, type MapMarkerGeometry } from '@/components/shared/LeafletMap';
 import { getAllOfflineRoutes } from '@/lib/offline/db';
+import { useMesh } from '@/hooks/use-mesh';
+import MeshStatusBadge from '@/components/mesh/MeshStatusBadge';
 
 const LeafletMap = dynamic(() => import('@/components/shared/LeafletMap'), { ssr: false });
 
@@ -115,6 +117,8 @@ export default function MapPageClient() {
   const [showMyLocation, setShowMyLocation] = useState(false);
   const [showSos, setShowSos] = useState(false);
   const [sosSending, setSosSending] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [meshEnabled, setMeshEnabled] = useState(false);
+  const { status: meshStatus, peers: meshPeers, sosPeers: meshSosPeers, sendSOS: sendMeshSOS } = useMesh(meshEnabled, userPos);
 
   // SOS-контакты захардкожены — работают ВСЕГДА, даже без IndexedDB.
   // tel: ссылки работают через мобильную сеть, интернет НЕ нужен.
@@ -279,6 +283,29 @@ export default function MapPageClient() {
     };
   }), [filtered, activeFilter, userPos]);
 
+  // Пиры mesh — зелёные маркеры поверх основных
+  const meshMarkers = useMemo(() => {
+    const result: typeof mapMarkers = [];
+    for (const [, peer] of meshPeers) {
+      if (!peer.position) continue;
+      result.push({
+        id:          `mesh-${peer.deviceId}`,
+        coords:      [peer.position.lat, peer.position.lng] as [number, number],
+        title:       peer.nickname ?? `Турист ${peer.deviceId.slice(0, 6)}`,
+        description: 'Участник mesh-группы',
+        color:       'green',
+        href:        undefined as unknown as string,
+        type:        MarkerType.TOUR,
+        category:    'mesh-peer',
+        geometry:    undefined,
+        suppressBalloon: false,
+      });
+    }
+    return result;
+  }, [meshPeers]);
+
+  const allMapMarkers = useMemo(() => [...mapMarkers, ...meshMarkers], [mapMarkers, meshMarkers]);
+
   // ── ОФЛАЙН-РЕЖИМ ──────────────────────────────────────────────────
   if (isOffline) {
     return (
@@ -302,6 +329,12 @@ export default function MapPageClient() {
               <Navigation className="w-3.5 h-3.5" />
               {showMyLocation ? 'GPS ON' : 'GPS'}
             </button>
+            {/* Mesh toggle */}
+            <MeshStatusBadge
+              status={meshEnabled ? meshStatus : 'idle'}
+              peerCount={meshPeers.size}
+              onClick={() => setMeshEnabled(v => !v)}
+            />
           </div>
         </div>
 
@@ -466,10 +499,35 @@ export default function MapPageClient() {
                   💬 SMS с координатами (без интернета)
                 </a>
               )}
+              {/* Mesh SOS — broadcast в локальную сеть */}
+              {meshEnabled && meshPeers.size > 0 && (
+                <button
+                  onClick={() => { sendMeshSOS(); }}
+                  className="w-full mt-2 flex items-center justify-center gap-2 py-3 rounded-lg bg-red-800 border border-red-500 text-white font-semibold text-sm hover:bg-red-700 active:bg-red-900 transition-all"
+                >
+                  Mesh SOS — {meshPeers.size} чел. в сети
+                </button>
+              )}
               <p className="text-[10px] text-white/30 mt-3 text-center">
                 Звонки работают без интернета · GPS определяет ваши координаты
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Входящий SOS от участника mesh */}
+        {meshSosPeers.length > 0 && (
+          <div className="absolute top-16 left-3 right-3 z-[510] rounded-xl bg-red-900/95 border border-red-500 p-3 shadow-2xl">
+            <p className="text-red-300 text-xs font-bold uppercase tracking-wide mb-1">SOS от участника группы</p>
+            {meshSosPeers.slice(-1).map((m, i) => {
+              const payload = m.payload as { position?: { lat: number; lng: number }; deviceId?: string } | null;
+              return (
+                <p key={i} className="text-white text-sm">
+                  {payload?.deviceId?.slice(0, 6) ?? '???'} — нужна помощь
+                  {payload?.position ? ` · ${payload.position.lat.toFixed(4)}, ${payload.position.lng.toFixed(4)}` : ''}
+                </p>
+              );
+            })}
           </div>
         )}
 
@@ -589,7 +647,7 @@ export default function MapPageClient() {
           <LeafletMap
             center={[53.0444, 158.6483]}
             zoom={7}
-            markers={mapMarkers}
+            markers={allMapMarkers}
             height="calc(100vh - 180px)"
             attribution={false}
             onMarkerClick={handleMarkerClick}
@@ -609,6 +667,31 @@ export default function MapPageClient() {
           >
             <Navigation size={18} />
           </button>
+
+          {/* Mesh toggle */}
+          <div className="absolute top-14 right-3 z-[500]">
+            <MeshStatusBadge
+              status={meshEnabled ? meshStatus : 'idle'}
+              peerCount={meshPeers.size}
+              onClick={() => setMeshEnabled(v => !v)}
+            />
+          </div>
+
+          {/* SOS от участника mesh (онлайн-режим) */}
+          {meshSosPeers.length > 0 && (
+            <div className="absolute top-3 left-3 z-[500] rounded-xl bg-red-600 border border-red-400 px-3 py-2 shadow-2xl max-w-[220px]">
+              <p className="text-white text-xs font-bold">SOS от участника группы</p>
+              {meshSosPeers.slice(-1).map((m, i) => {
+                const payload = m.payload as { position?: { lat: number; lng: number }; deviceId?: string } | null;
+                return (
+                  <p key={i} className="text-white/80 text-xs mt-0.5">
+                    {payload?.deviceId?.slice(0, 6) ?? '???'}
+                    {payload?.position ? ` · ${payload.position.lat.toFixed(4)}, ${payload.position.lng.toFixed(4)}` : ''}
+                  </p>
+                );
+              })}
+            </div>
+          )}
 
           {/* Счётчик */}
           <div className="absolute bottom-3 left-3 z-[500] bg-[var(--bg-card)] rounded-lg px-3 py-1.5 border border-[var(--border)] shadow-sm">
