@@ -1,9 +1,7 @@
 name: Cron — Kuzmich Place Reviews
 
 on:
-  schedule:
-    - cron: '30 22 * * *'  # 22:30 UTC — DeepSeek off-peak window
-  workflow_dispatch:
+  workflow_dispatch:  # ОТКЛЮЧЕНО
 
 jobs:
   enrich:
