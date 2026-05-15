@@ -56,7 +56,7 @@ export async function POST(
       images: string[];
     }>(
       `SELECT id, title, photos, images
-       FROM tours
+       FROM operator_tours
        WHERE id = $1 AND operator_id = $2`,
       [tourId, operatorId]
     );
@@ -88,7 +88,7 @@ export async function POST(
 
     // Сохраняем в БД
     await query(
-      `UPDATE tours
+      `UPDATE operator_tours
        SET ai_tags = $1::jsonb, updated_at = NOW()
        WHERE id = $2 AND operator_id = $3`,
       [JSON.stringify(tags), tourId, operatorId]
@@ -126,7 +126,7 @@ export async function GET(
 
     const result = await query<{ ai_tags: Record<string, unknown> }>(
       `SELECT ai_tags
-       FROM tours
+       FROM operator_tours
        WHERE id = $1 AND operator_id = $2`,
       [tourId, operatorId]
     );

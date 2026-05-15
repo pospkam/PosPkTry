@@ -37,8 +37,8 @@ export async function GET(
 
     // Проверяем существование тура
     const tourQuery = `
-      SELECT id, name, max_group_size, tour_type, is_active
-      FROM tours
+      SELECT id, title AS name, max_participants AS max_group_size, tour_type, is_active
+      FROM operator_tours
       WHERE id = $1
     `;
     const tourResult = await query<TourTimeslotRow>(tourQuery, [id]);
@@ -65,13 +65,13 @@ export async function GET(
         SELECT
           td.id,
           td.tour_date,
-          COALESCE(SUM(b.guests_count), 0) as booked_guests,
+          COALESCE(SUM(b.participants), 0) as booked_guests,
           $2::integer as max_capacity,
-          ($2::integer - COALESCE(SUM(b.guests_count), 0)) as spots_left
+          ($2::integer - COALESCE(SUM(b.participants), 0)) as spots_left
         FROM tour_dates td
-        LEFT JOIN bookings b ON b.tour_id = $1 
-          AND DATE(b.start_date) = td.tour_date
-          AND b.status IN ('confirmed', 'pending')
+        LEFT JOIN operator_bookings b ON b.operator_tour_id = $1
+          AND DATE(b.booking_date) = td.tour_date
+          AND b.booking_status IN ('confirmed', 'new')
         WHERE td.tour_id = $1 AND DATE(td.tour_date) = $3::date
         GROUP BY td.id, td.tour_date
       `;

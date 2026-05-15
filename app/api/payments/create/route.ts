@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     let bookingQuery = '';
     switch (bookingType) {
       case 'tour':
-        bookingQuery = 'SELECT id, total_price, status, user_id FROM bookings WHERE id = $1';
+        bookingQuery = 'SELECT id, COALESCE(final_price, base_total_price) AS total_price, booking_status AS status, metadata->>\'user_id\' AS user_id FROM operator_bookings WHERE id = $1';
         break;
       case 'accommodation':
         bookingQuery = 'SELECT id, total_price, status, user_id FROM accommodation_bookings WHERE id = $1';

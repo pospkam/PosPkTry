@@ -19,10 +19,10 @@ export async function GET(
          td.available_slots - td.booked_slots AS free_slots,
          td.available_slots,
          td.booked_slots,
-         COALESCE(td.price_override, t.price) AS price,
+         COALESCE(td.price_override, t.base_price) AS price,
          td.notes
        FROM tour_departures td
-       JOIN tours t ON t.id = td.tour_id
+       JOIN operator_tours t ON t.id = td.tour_id
        WHERE td.tour_id = $1
          AND td.status = 'active'
          AND td.available_slots > td.booked_slots

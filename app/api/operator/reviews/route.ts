@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         r.updated_at,
         COALESCE(array_agg(DISTINCT a.url) FILTER (WHERE a.url IS NOT NULL), '{}') as photos
       FROM reviews r
-      JOIN tours t ON r.tour_id = t.id
+      JOIN operator_tours t ON r.tour_id = t.id
       JOIN users u ON r.user_id = u.id
       LEFT JOIN review_assets ra ON r.id = ra.review_id
       LEFT JOIN assets a ON ra.asset_id = a.id
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
     let countQuery = `
       SELECT COUNT(*) 
       FROM reviews r
-      JOIN tours t ON r.tour_id = t.id
+      JOIN operator_tours t ON r.tour_id = t.id
       WHERE t.operator_id = $1
     `;
     const countParams: (string | number | boolean | null)[] = [operatorId];
@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
         COUNT(CASE WHEN r.rating = 2 THEN 1 END) as two_stars,
         COUNT(CASE WHEN r.rating = 1 THEN 1 END) as one_star
       FROM reviews r
-      JOIN tours t ON r.tour_id = t.id
+      JOIN operator_tours t ON r.tour_id = t.id
       WHERE t.operator_id = $1`,
       [operatorId]
     );

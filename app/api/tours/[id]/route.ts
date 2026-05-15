@@ -41,7 +41,7 @@ export async function GET(
         p.id           AS partner_id_val,
         p.name         AS partner_name,
         p.rating       AS partner_rating
-       FROM tours t
+       FROM operator_tours t
        LEFT JOIN kamchatka_routes kr ON t.route_id = kr.id
        LEFT JOIN partners p ON t.operator_id = p.id
        WHERE t.id = $1 AND t.is_active = TRUE`,

@@ -16,7 +16,7 @@ export async function GET(
     const { id, depId } = await context.params;
 
     const tourCheck = await query<{ id: string; price: string }>(
-      'SELECT id, price FROM tours WHERE id = $1',
+      'SELECT id, base_price AS price FROM operator_tours WHERE id = $1',
       [id]
     );
     if (tourCheck.rows.length === 0) {

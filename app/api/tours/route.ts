@@ -108,22 +108,22 @@ export async function GET(request: NextRequest) {
     const buildSelect = (newSchema: boolean) => `
       SELECT
         t.id,
-        ${newSchema ? 't.title AS name' : 't.name'},
+        ${newSchema ? 't.title AS name' : 't.title AS name'},
         t.description,
         t.short_description,
         t.category,
         t.difficulty,
-        t.duration,
-        t.price,
+        t.duration_days AS duration,
+        t.base_price AS price,
         t.currency,
         t.season,
         t.coordinates,
         t.requirements,
         t.included,
         t.not_included,
-        ${newSchema ? 't.max_participants, t.min_participants' : 't.max_group_size AS max_participants, t.min_group_size AS min_participants'},
+        ${newSchema ? 't.max_participants, t.min_participants' : 't.max_participants, t.min_participants'},
         t.rating,
-        ${newSchema ? 't.reviews_count' : 't.review_count AS reviews_count'},
+        ${newSchema ? 't.reviews_count' : 't.reviews_count'},
         t.is_active,
         ${newSchema ? 't.images,' : '\'[]\' AS images,'}
         t.created_at,
@@ -131,9 +131,9 @@ export async function GET(request: NextRequest) {
         p.name as operator_name,
         p.hero_image as partner_hero_image,
         p.gallery as partner_gallery
-      FROM tours t
+      FROM operator_tours t
       LEFT JOIN partners p ON t.operator_id = p.id
-      ${newSchema ? whereClause : whereClause.replace(/t\.title\s+ILIKE/g, 't.name ILIKE')}
+      ${newSchema ? whereClause : whereClause.replace(/t\.title\s+ILIKE/g, 't.title ILIKE')}
       ORDER BY t.created_at DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
 
     // Подсчёт (аналогично)
     const countBase = (newSchema: boolean) =>
-      `SELECT COUNT(*)::int AS total FROM tours t ${newSchema ? whereClause : whereClause.replace(/t\.title\s+ILIKE/g, 't.name ILIKE')}`;
+      `SELECT COUNT(*)::int AS total FROM operator_tours t ${newSchema ? whereClause : whereClause.replace(/t\.title\s+ILIKE/g, 't.title ILIKE')}`;
     let countResult;
     try {
       countResult = await query<TotalRow>(countBase(true), queryParams.slice(0, -2));
@@ -328,9 +328,9 @@ export async function POST(request: NextRequest) {
     }
 
     const insertQuery = `
-      INSERT INTO tours (
+      INSERT INTO operator_tours (
         title, description, short_description, category, difficulty,
-        duration, price, currency, season, coordinates,
+        duration_days, base_price, currency, season, coordinates,
         requirements, included, not_included,
         max_participants, min_participants, operator_id, guide_id, route_id,
         is_active, created_at, updated_at

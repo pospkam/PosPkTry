@@ -112,19 +112,19 @@ export async function GET(request: NextRequest) {
     const summaryResult = await query<OpRevenueSummaryRow>(
       `SELECT
         COUNT(*) as total_bookings,
-        SUM(b.total_price) as total_revenue,
-        SUM(CASE WHEN b.payment_status = 'paid' THEN b.total_price ELSE 0 END) as paid_revenue,
-        SUM(CASE WHEN b.payment_status = 'pending' THEN b.total_price ELSE 0 END) as pending_revenue,
-        SUM(CASE WHEN b.payment_status = 'refunded' THEN b.total_price ELSE 0 END) as refunded_revenue,
-        AVG(b.total_price) as avg_booking_value,
-        MIN(b.total_price) as min_booking_value,
-        MAX(b.total_price) as max_booking_value
-      FROM bookings b
-      JOIN tours t ON b.tour_id = t.id
+        SUM(COALESCE(b.final_price, b.base_total_price)) as total_revenue,
+        SUM(CASE WHEN b.payment_status = 'paid' THEN COALESCE(b.final_price, b.base_total_price) ELSE 0 END) as paid_revenue,
+        SUM(CASE WHEN b.payment_status = 'pending' THEN COALESCE(b.final_price, b.base_total_price) ELSE 0 END) as pending_revenue,
+        SUM(CASE WHEN b.payment_status = 'refunded' THEN COALESCE(b.final_price, b.base_total_price) ELSE 0 END) as refunded_revenue,
+        AVG(COALESCE(b.final_price, b.base_total_price)) as avg_booking_value,
+        MIN(COALESCE(b.final_price, b.base_total_price)) as min_booking_value,
+        MAX(COALESCE(b.final_price, b.base_total_price)) as max_booking_value
+      FROM operator_bookings b
+      JOIN operator_tours t ON t.id = b.operator_tour_id
       WHERE t.operator_id = $1
         AND b.created_at >= $2
         AND b.created_at <= $3
-        AND b.status != 'cancelled'`,
+        AND b.booking_status != 'cancelled'`,
       [operatorId, startDate, endDate]
     );
 
