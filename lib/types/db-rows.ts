@@ -139,9 +139,13 @@ export interface TopOperatorRow {
 
 export interface BookingAdminRow {
   id: string;
+  booking_date: Date | null;
   date: Date;
   participants: number;
+  base_total_price: string;
+  final_price: string | null;
   total_price: string;
+  booking_status: string;
   status: string;
   payment_status: string;
   special_requests: string | null;

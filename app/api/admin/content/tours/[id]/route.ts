@@ -41,7 +41,7 @@ export async function PUT(
     }
 
     // Проверяем существование тура
-    const checkQuery = 'SELECT id FROM tours WHERE id = $1';
+    const checkQuery = 'SELECT id FROM operator_tours WHERE id = $1';
     const checkResult = await query(checkQuery, [id]);
 
     if (checkResult.rows.length === 0) {
@@ -136,7 +136,7 @@ export async function DELETE(
     const { id } = await context.params;
 
     // Проверяем существование
-    const checkQuery = 'SELECT id FROM tours WHERE id = $1';
+    const checkQuery = 'SELECT id FROM operator_tours WHERE id = $1';
     const checkResult = await query(checkQuery, [id]);
 
     if (checkResult.rows.length === 0) {

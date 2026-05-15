@@ -23,21 +23,20 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     let queryStr = `
-      SELECT 
+      SELECT
         b.*,
-        t.name as tour_name,
-        u.name as user_name,
-        u.email as user_email
-      FROM bookings b
-      JOIN tours t ON b.tour_id = t.id
-      JOIN users u ON b.user_id = u.id
+        t.title as tour_name,
+        b.tourist_name as user_name,
+        b.tourist_phone as user_email
+      FROM operator_bookings b
+      JOIN operator_tours t ON b.operator_tour_id = t.id
     `;
 
     const params: (string | number)[] = [];
     let paramIndex = 1;
 
     if (status) {
-      queryStr += ` WHERE b.status = $${paramIndex++}`;
+      queryStr += ` WHERE b.booking_status = $${paramIndex++}`;
       params.push(status);
     }
 
@@ -48,10 +47,10 @@ export async function GET(request: NextRequest) {
 
     const bookings = result.rows.map(row => ({
       id: row.id,
-      date: row.date,
+      date: row.booking_date ?? row.created_at,
       participants: row.participants,
-      totalPrice: parseFloat(row.total_price),
-      status: row.status,
+      totalPrice: parseFloat(row.final_price ?? row.base_total_price ?? '0'),
+      status: row.booking_status,
       paymentStatus: row.payment_status,
       specialRequests: row.special_requests,
       createdAt: row.created_at,
@@ -63,7 +62,7 @@ export async function GET(request: NextRequest) {
 
     // Get total count
     const countResult = await query<CountRow>(
-      status ? 'SELECT COUNT(*) FROM bookings WHERE status = $1' : 'SELECT COUNT(*) FROM bookings',
+      status ? 'SELECT COUNT(*) FROM operator_bookings WHERE booking_status = $1' : 'SELECT COUNT(*) FROM operator_bookings',
       status ? [status] : []
     );
 

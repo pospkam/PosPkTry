@@ -51,9 +51,9 @@ export async function GET(
         SELECT
           user_id,
           COUNT(*) as bookings_count,
-          SUM(total_price) as total_spent
-        FROM bookings
-        WHERE payment_status = 'paid'
+          SUM(base_total_price) as total_spent
+        FROM operator_bookings
+        WHERE booking_status = 'confirmed'
         GROUP BY user_id
       ) b ON u.id = b.user_id
       WHERE u.id = $1

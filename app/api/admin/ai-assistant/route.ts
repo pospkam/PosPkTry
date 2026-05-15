@@ -51,14 +51,14 @@ export async function POST(request: NextRequest) {
 
     try {
       const r = await query<{ cnt: string }>(
-        `SELECT COUNT(*) as cnt FROM bookings WHERE created_at >= NOW() - INTERVAL '30 days'`, []
+        `SELECT COUNT(*) as cnt FROM operator_bookings WHERE created_at >= NOW() - INTERVAL '30 days'`, []
       );
       bookings30d = parseInt(r.rows[0]?.cnt ?? '0', 10);
     } catch { /* 0 */ }
 
     try {
       const r = await query<{ rev: string }>(
-        `SELECT COALESCE(SUM(total_price), 0) as rev FROM bookings WHERE created_at >= NOW() - INTERVAL '30 days'`, []
+        `SELECT COALESCE(SUM(base_total_price), 0) as rev FROM operator_bookings WHERE created_at >= NOW() - INTERVAL '30 days'`, []
       );
       revenue30d = parseFloat(r.rows[0]?.rev ?? '0');
     } catch { /* 0 */ }
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     try {
       const r = await query<{ cnt: string }>(
-        'SELECT COUNT(*) as cnt FROM tours WHERE is_active = true', []
+        'SELECT COUNT(*) as cnt FROM operator_tours WHERE is_active = true', []
       );
       activeTours = parseInt(r.rows[0]?.cnt ?? '0', 10);
     } catch { /* 0 */ }

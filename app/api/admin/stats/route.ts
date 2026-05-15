@@ -31,20 +31,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       currentMonthBookingsResult,
     ] = await Promise.all([
       query<CountRow>('SELECT COUNT(*) as count FROM users'),
-      query<CountRow>('SELECT COUNT(*) as count FROM tours WHERE is_active = true'),
-      query<CountRow>('SELECT COUNT(*) as count FROM bookings'),
-      query<RevenueRow>(`SELECT COALESCE(SUM(total_price), 0) as revenue FROM bookings WHERE payment_status = 'paid'`),
+      query<CountRow>('SELECT COUNT(*) as count FROM operator_tours WHERE is_active = true'),
+      query<CountRow>('SELECT COUNT(*) as count FROM operator_bookings'),
+      query<RevenueRow>(`SELECT COALESCE(SUM(base_total_price), 0) as revenue FROM operator_bookings WHERE booking_status = 'confirmed'`),
       query<CountRow>('SELECT COUNT(*) as count FROM transfer_bookings WHERE status = \'active\''),
-      query<CountRow>('SELECT COUNT(*) as count FROM bookings WHERE DATE(created_at) = CURRENT_DATE'),
+      query<CountRow>('SELECT COUNT(*) as count FROM operator_bookings WHERE DATE(created_at) = CURRENT_DATE'),
       query<CountRow>(`
         SELECT COUNT(*) as count
-        FROM bookings
+        FROM operator_bookings
         WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')
           AND created_at < DATE_TRUNC('month', CURRENT_DATE)
       `),
       query<CountRow>(`
         SELECT COUNT(*) as count
-        FROM bookings
+        FROM operator_bookings
         WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE)
       `),
     ]);
@@ -110,7 +110,7 @@ async function getUsersByRole(): Promise<Record<string, number>> {
 async function getDailyBookings(): Promise<number[]> {
   const result = await query<DailyCountRow>(`
     SELECT DATE(created_at) as date, COUNT(*) as count
-    FROM bookings
+    FROM operator_bookings
     WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'
     GROUP BY DATE(created_at)
     ORDER BY date ASC
@@ -120,10 +120,10 @@ async function getDailyBookings(): Promise<number[]> {
 
 async function getDailyRevenue(): Promise<number[]> {
   const result = await query<DailyRevenueRow>(`
-    SELECT DATE(created_at) as date, COALESCE(SUM(total_price), 0) as revenue
-    FROM bookings
+    SELECT DATE(created_at) as date, COALESCE(SUM(base_total_price), 0) as revenue
+    FROM operator_bookings
     WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'
-      AND payment_status = 'paid'
+      AND booking_status = 'confirmed'
     GROUP BY DATE(created_at)
     ORDER BY date ASC
   `);
@@ -133,8 +133,8 @@ async function getDailyRevenue(): Promise<number[]> {
 async function getTopTours(): Promise<{ id: string; name: string; bookings: number }[]> {
   const result = await query<TopTourStatsRow>(`
     SELECT t.id, t.name, COUNT(b.id) as bookings
-    FROM tours t
-    LEFT JOIN bookings b ON t.id = b.tour_id
+    FROM operator_tours t
+    LEFT JOIN operator_bookings b ON t.id = b.operator_tour_id
     GROUP BY t.id, t.name
     ORDER BY bookings DESC
     LIMIT 5
@@ -152,10 +152,10 @@ async function getTopOperators(): Promise<{ id: string; name: string; revenue: n
       p.id,
       p.name,
       COUNT(b.id) as bookings,
-      COALESCE(SUM(b.total_price), 0) as revenue
+      COALESCE(SUM(b.base_total_price), 0) as revenue
     FROM partners p
-    LEFT JOIN tours t ON p.id = t.operator_id
-    LEFT JOIN bookings b ON t.id = b.tour_id AND b.payment_status = 'paid'
+    LEFT JOIN operator_tours t ON p.id = t.operator_id
+    LEFT JOIN operator_bookings b ON t.id = b.operator_tour_id AND b.booking_status = 'confirmed'
     WHERE p.category = 'operator'
     GROUP BY p.id, p.name
     ORDER BY revenue DESC
