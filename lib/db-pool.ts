@@ -28,7 +28,7 @@ function sanitizeMalformedPostgresUrl(raw: string): string {
 // Маппим hostname на IP если DNS не работает в контейнере.
 // DB_HOST_IP — переменная окружения для обновления IP без передеплоя кода.
 const KNOWN_HOST_MAP: Record<string, string> = {
-  '8ad609fcbfd2ad0bd069be47.twc1.net': process.env.DB_HOST_IP ?? '94.228.112.62',
+  '8ad609fcbfd2ad0bd069be47.twc1.net': process.env.DB_HOST_IP ?? '192.168.0.4',
 };
 
 function resolveHost(host: string): string {
