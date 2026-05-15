@@ -170,7 +170,7 @@ export async function GET(request: NextRequest) {
         COUNT(*) FILTER (WHERE rating = 1) as one_star,
         COUNT(*) FILTER (WHERE operator_reply IS NOT NULL) as replied_count
       FROM reviews r
-      JOIN tours t ON r.tour_id = t.id
+      JOIN operator_tours t ON r.tour_id = t.id
       WHERE t.operator_id = $1
         AND r.created_at >= $2`,
       [operatorId, startDate]

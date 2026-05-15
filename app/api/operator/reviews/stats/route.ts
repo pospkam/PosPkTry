@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
         t.name as tour_name,
         u.name as user_name
       FROM reviews r
-      JOIN tours t ON r.tour_id = t.id
+      JOIN operator_tours t ON r.tour_id = t.id
       JOIN users u ON r.user_id = u.id
       WHERE t.operator_id = $1
         AND r.rating <= 3
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
         MIN(EXTRACT(EPOCH FROM (operator_reply_at - created_at))/3600) as min_response_hours,
         MAX(EXTRACT(EPOCH FROM (operator_reply_at - created_at))/3600) as max_response_hours
       FROM reviews r
-      JOIN tours t ON r.tour_id = t.id
+      JOIN operator_tours t ON r.tour_id = t.id
       WHERE t.operator_id = $1
         AND operator_reply_at IS NOT NULL
         AND created_at >= $2`,

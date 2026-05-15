@@ -97,8 +97,8 @@ async function handleSuccessfulPayment(webhook: CloudPaymentsWebhook) {
     switch (payment.booking_type) {
       case 'tour':
         updateBookingQuery = `
-          UPDATE bookings
-          SET payment_status = 'paid', status = 'confirmed', updated_at = NOW()
+          UPDATE operator_bookings
+          SET payment_status = 'paid', booking_status = 'confirmed', updated_at = NOW()
           WHERE id = $1
         `;
         break;

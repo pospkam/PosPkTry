@@ -60,8 +60,8 @@ export async function GET(
     if (!isAdmin && !isPaymentOwner && auth.role === 'operator' && payment.booking_type === 'tour') {
       const operatorAccessResult = await query(
         `SELECT b.id
-         FROM bookings b
-         JOIN tours t ON b.tour_id = t.id
+         FROM operator_bookings b
+         JOIN operator_tours t ON t.id = b.operator_tour_id
          JOIN partners p ON t.operator_id = p.id
          WHERE b.id = $1 AND p.user_id = $2
          LIMIT 1`,

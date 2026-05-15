@@ -38,7 +38,7 @@ export async function POST(
     const checkResult = await query(
       `SELECT r.id
        FROM reviews r
-       JOIN tours t ON r.tour_id = t.id
+       JOIN operator_tours t ON r.tour_id = t.id
        JOIN partners p ON t.operator_id = p.id
        WHERE r.id = $1 AND p.user_id = $2
        LIMIT 1`,
