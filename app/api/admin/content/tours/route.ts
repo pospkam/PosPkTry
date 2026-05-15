@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     // Подсчёт общего количества
     const countQuery = `
       SELECT COUNT(*)
-      FROM tours t
+      FROM operator_tours t
       ${whereClause}
     `;
 
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
         t.created_at,
         t.updated_at,
         p.name as operator_name
-      FROM tours t
+      FROM operator_tours t
       LEFT JOIN partners p ON t.operator_id = p.id
       ${whereClause}
       ORDER BY t.${sortBy} ${sortOrder}
@@ -161,6 +161,5 @@ export async function GET(request: NextRequest) {
     } as ApiResponse<null>, { status: 500 });
   }
 }
-
 
 

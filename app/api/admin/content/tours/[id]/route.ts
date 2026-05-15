@@ -41,7 +41,7 @@ export async function PUT(
     }
 
     // Проверяем существование тура
-    const checkQuery = 'SELECT id FROM tours WHERE id = $1';
+    const checkQuery = 'SELECT id FROM operator_tours WHERE id = $1';
     const checkResult = await query(checkQuery, [id]);
 
     if (checkResult.rows.length === 0) {
@@ -91,7 +91,7 @@ export async function PUT(
     values.push(id);
 
     const updateQuery = `
-      UPDATE tours
+      UPDATE operator_tours
       SET ${updates.join(', ')}
       WHERE id = $${paramIndex}
       RETURNING id, name, is_active, updated_at
@@ -136,7 +136,7 @@ export async function DELETE(
     const { id } = await context.params;
 
     // Проверяем существование
-    const checkQuery = 'SELECT id FROM tours WHERE id = $1';
+    const checkQuery = 'SELECT id FROM operator_tours WHERE id = $1';
     const checkResult = await query(checkQuery, [id]);
 
     if (checkResult.rows.length === 0) {
@@ -148,7 +148,7 @@ export async function DELETE(
 
     // Вместо удаления - деактивируем (мягкое удаление)
     const archiveQuery = `
-      UPDATE tours
+      UPDATE operator_tours
       SET is_active = false, updated_at = NOW()
       WHERE id = $1
       RETURNING id
@@ -169,6 +169,5 @@ export async function DELETE(
     } as ApiResponse<null>, { status: 500 });
   }
 }
-
 
 
