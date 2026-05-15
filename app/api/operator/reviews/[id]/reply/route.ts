@@ -56,7 +56,7 @@ export async function POST(
     const result = await query(
       `UPDATE reviews r
        SET operator_reply = $1, operator_reply_at = NOW()
-       FROM tours t
+       FROM operator_tours t
        JOIN partners p ON t.operator_id = p.id
        WHERE r.id = $2
          AND r.tour_id = t.id
