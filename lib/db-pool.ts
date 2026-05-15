@@ -24,6 +24,16 @@ function sanitizeMalformedPostgresUrl(raw: string): string {
   return `${scheme}${encodeURIComponent(usernameRaw)}:${encodeURIComponent(passwordRaw)}@${host}:${port}/${dbPart}`;
 }
 
+// Timeweb внутри контейнера не резолвит hostname БД через DNS.
+// Маппим известный hostname на IP напрямую — без изменения env vars.
+const KNOWN_HOST_MAP: Record<string, string> = {
+  '8ad609fcbfd2ad0bd069be47.twc1.net': '94.228.112.62',
+};
+
+function resolveHost(host: string): string {
+  return KNOWN_HOST_MAP[host] ?? host;
+}
+
 function buildPoolConfig() {
   const rawDbUrl = normalizeDatabaseUrl(config.database.url || '');
   const dbUrl = sanitizeMalformedPostgresUrl(rawDbUrl);
@@ -34,13 +44,13 @@ function buildPoolConfig() {
     const [, , usernameRaw, passwordRaw, host, portRaw, dbPart] = manual;
     const decodeSafe = (v: string) => { try { return decodeURIComponent(v); } catch { return v; } };
     const [dbName] = dbPart.split('?');
-    return { user: decodeSafe(usernameRaw), password: decodeSafe(passwordRaw), host, port: parseInt(portRaw, 10), database: dbName, ssl: useSSL ? { rejectUnauthorized: false } : false, max: 20, idleTimeoutMillis: 30000, connectionTimeoutMillis: 5000 };
+    return { user: decodeSafe(usernameRaw), password: decodeSafe(passwordRaw), host: resolveHost(host), port: parseInt(portRaw, 10), database: dbName, ssl: useSSL ? { rejectUnauthorized: false } : false, max: 20, idleTimeoutMillis: 30000, connectionTimeoutMillis: 5000 };
   }
 
   try {
     const parsed = new URL(dbUrl);
     if (parsed.protocol === 'postgresql:' || parsed.protocol === 'postgres:') {
-      return { user: decodeURIComponent(parsed.username), password: decodeURIComponent(parsed.password), host: parsed.hostname, port: parsed.port ? parseInt(parsed.port, 10) : 5432, database: parsed.pathname.replace(/^\//, ''), ssl: useSSL ? { rejectUnauthorized: false } : false, max: 20, idleTimeoutMillis: 30000, connectionTimeoutMillis: 5000 };
+      return { user: decodeURIComponent(parsed.username), password: decodeURIComponent(parsed.password), host: resolveHost(parsed.hostname), port: parsed.port ? parseInt(parsed.port, 10) : 5432, database: parsed.pathname.replace(/^\//, ''), ssl: useSSL ? { rejectUnauthorized: false } : false, max: 20, idleTimeoutMillis: 30000, connectionTimeoutMillis: 5000 };
     }
   } catch { /* fall through */ }
 
