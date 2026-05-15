@@ -11,7 +11,7 @@
  */
 
 import { pool } from '@/lib/db-pool';
-import { callDeepSeek } from '@/lib/ai/providers';
+import { callAIWaterfall } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/prompts';
 
 export interface EditorResult {
@@ -96,7 +96,7 @@ ${route.description ? `Имеющееся описание (расширь и у
   ];
 
   try {
-    const result = await callDeepSeek(messages);
+    const result = await callAIWaterfall(messages);
     return result?.trim() ?? null;
   } catch {
     return null;
