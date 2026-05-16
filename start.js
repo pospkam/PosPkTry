@@ -8,10 +8,11 @@ const proxy = http.createServer((req, res) => {
     res.end(JSON.stringify({ status: 'ok' }));
     return;
   }
-  // Preserve the real public host so Next.js builds correct absolute URLs in redirects.
-  // Without these headers Next.js falls back to 127.0.0.1:3001 (internal bind address).
+  // Next.js 15.5.16 DNS-rebinding check compares incoming Host header against HOSTNAME.
+  // Override host to match the internal bind address; preserve real host via x-forwarded-host.
   const forwardedHeaders = {
     ...req.headers,
+    'host':               '127.0.0.1:3001',
     'x-forwarded-host':  req.headers['x-forwarded-host']  || req.headers['host'] || '',
     'x-forwarded-proto': req.headers['x-forwarded-proto'] || 'https',
     'x-forwarded-for':   req.headers['x-forwarded-for']   || req.socket.remoteAddress || '127.0.0.1',
