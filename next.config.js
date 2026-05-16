@@ -11,9 +11,6 @@ const nextConfig = {
     },
   },
 
-  // Next.js 15.5.16: allowedHosts 'all' — Timeweb проксирует через внутренний балансировщик,
-  // реальный Host в контейнере может отличаться от tourhab.ru. Auth через middleware.ts.
-  allowedHosts: 'all',
   // outputFileTracingRoot removed — may prevent standalone output
 
   // ESLint: skip during build (saves ~500MB RAM) — checks run locally via CI
