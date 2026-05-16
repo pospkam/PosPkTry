@@ -51,7 +51,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/telegram': 'ALL',          // Telegram webhook
   '/api/max': 'ALL',               // MAX bot webhook
   '/api/operators': ['GET'],        // публичный каталог партнёров
-  '/api/assistant': ['GET', 'POST'],  // «AI-помощник Камчатки» — история + чат
+  '/api/assistant': ['GET', 'POST'],  // «АI-помощник Камчатки» — история + чат
   '/api/loyalty/levels': ['GET'],   // уровни программы лояльности (публичный каталог)
   '/api/planner/recommend':      ['POST'], // AI trip recommender
   '/api/planner/partners':       ['GET'],  // операторы для дня маршрута
@@ -73,6 +73,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/hub/marketplace/tours': ['GET'], // публичный каталог туров маршрутплейса
   '/api/hub/bookings': ['GET'],           // booking-success страница (без персональных данных, ФЗ-152 ок)
   '/api/places': ['GET'],                 // карточка точки/локации (публичная)
+  '/api/trips/share': ['GET'],            // публичный просмотр маршрута по share_token
   '/api/channels/avito/feed':  ['GET'], // Avito Autoload XML feed — публичный
   '/api/widget': ['POST', 'GET', 'OPTIONS'],    // Partner widget API — CORS-enabled
   '/api/health': ['GET'],              // health checks — monitoring/infra
