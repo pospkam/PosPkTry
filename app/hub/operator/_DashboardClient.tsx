@@ -142,15 +142,15 @@ export default function OperatorDashboard() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link href="/hub/operator/calendar" className="ds-card p-6 hover:bg-[var(--bg-hover)] transition">
-          <h3 className="ds-h2 text-base mb-2">📅 Календарь</h3>
+          <h3 className="ds-h2 text-base mb-2 flex items-center gap-2"><Calendar className="w-4 h-4" /> Календарь</h3>
           <p className="text-sm text-[var(--text-secondary)]">Управлять датами туров</p>
         </Link>
         <Link href="/hub/operator/bookings" className="ds-card p-6 hover:bg-[var(--bg-hover)] transition">
-          <h3 className="ds-h2 text-base mb-2">📝 Букировки</h3>
+          <h3 className="ds-h2 text-base mb-2 flex items-center gap-2"><BarChart3 className="w-4 h-4" /> Букировки</h3>
           <p className="text-sm text-[var(--text-secondary)]">Посмотреть все букировки</p>
         </Link>
         <Link href="/hub/operator/finance" className="ds-card p-6 hover:bg-[var(--bg-hover)] transition">
-          <h3 className="ds-h2 text-base mb-2">💰 Финансы</h3>
+          <h3 className="ds-h2 text-base mb-2 flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Финансы</h3>
           <p className="text-sm text-[var(--text-secondary)]">История платежей и выплат</p>
         </Link>
       </div>
