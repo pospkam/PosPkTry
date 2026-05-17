@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -483,7 +483,10 @@ export default function MarketplaceClient() {
   // Wishlist
   const [likedMap, setLikedMap] = useState<Map<number, string>>(new Map());
 
-  const activeFiltersCount = [difficulty, priceRange, durationType].filter(Boolean).length;
+  const activeFiltersCount = useMemo(
+    () => [difficulty, priceRange, durationType].filter(Boolean).length,
+    [difficulty, priceRange, durationType],
+  );
 
   const getPriceParams = useCallback(() => {
     const range = PRICE_RANGES.find(r => r.value === priceRange);

@@ -48,7 +48,7 @@ function MobileBottomBar({ place }: { place: PlaceData }) {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden safe-area-bottom">
-      <div className="flex items-center gap-2 px-3 py-3 bg-[var(--bg-card)]/95 backdrop-blur-sm border-t border-[var(--border)]">
+      <div className="flex items-center gap-2 px-3 py-3 bg-[var(--bg-card)] border-t border-[var(--border)]">
         <a
           href={geoUrl}
           className="flex-1 flex items-center justify-center gap-2 text-sm font-semibold text-white bg-[var(--accent)] rounded-xl py-3 hover:opacity-90 transition-opacity"
