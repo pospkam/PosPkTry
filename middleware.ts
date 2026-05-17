@@ -74,6 +74,8 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/hub/bookings': ['GET'],           // booking-success страница (без персональных данных, ФЗ-152 ок)
   '/api/places': ['GET'],                 // карточка точки/локации (публичная)
   '/api/trips/share': ['GET'],            // публичный просмотр маршрута по share_token
+  '/api/collections': ['GET'],            // публичные подборки мест и маршрутов
+  '/api/trending': ['GET'],               // популярные места и маршруты
   '/api/channels/avito/feed':  ['GET'], // Avito Autoload XML feed — публичный
   '/api/widget': ['POST', 'GET', 'OPTIONS'],    // Partner widget API — CORS-enabled
   '/api/health': ['GET'],              // health checks — monitoring/infra
