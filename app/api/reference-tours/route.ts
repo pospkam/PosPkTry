@@ -19,20 +19,23 @@ export async function GET(request: NextRequest) {
     const activity = searchParams.get('activity');
     const zone = searchParams.get('zone');
 
-    let sql = 'SELECT * FROM reference_tours WHERE 1=1';
     const params: (string | number)[] = [];
+    const conditions: string[] = [];
 
     if (activity) {
-      sql += ` AND activity_type = $${params.length + 1}`;
       params.push(activity);
+      conditions.push(`activity_type = $${params.length}`);
     }
 
     if (zone) {
-      sql += ` AND zone = $${params.length + 1}`;
       params.push(zone);
+      conditions.push(`zone = $${params.length}`);
     }
 
-    sql += ' ORDER BY created_at DESC';
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const sql = `SELECT id, operator_id, activity_type, zone, price_per_person,
+      duration_hours, max_participants, description, created_at
+      FROM reference_tours ${where} ORDER BY created_at DESC`;
 
     const result = await query<ReferenceTour>(sql, params);
     return NextResponse.json({ tours: result.rows });

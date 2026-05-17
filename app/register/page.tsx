@@ -141,36 +141,36 @@ export default function RegisterRoutePage() {
 
   if (submitted) {
     return (
-      <div className="min-h-[100dvh] bg-[#0a0a0a] text-white flex items-center justify-center p-6">
+      <div className="min-h-[100dvh] bg-[var(--bg-primary)] text-[var(--text-primary)] flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <CheckCircle className="w-16 h-16 text-[var(--success)] mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Маршрут зарегистрирован</h1>
-          <p className="text-white/60 mb-6 text-sm">
+          <p className="text-[var(--text-secondary)] mb-6 text-sm">
             PDF-заявка скачана. Подайте её в МЧС одним из способов:
           </p>
 
           <div className="space-y-3 mb-6 text-left">
-            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-              <p className="font-semibold text-sm mb-1">📱 Через Госуслуги</p>
-              <p className="text-xs text-white/50">Подайте электронное заявление на gosuslugi.ru</p>
+            <div className="p-4 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)]">
+              <p className="font-semibold text-sm mb-1">Через Госуслуги</p>
+              <p className="text-xs text-[var(--text-muted)]">Подайте электронное заявление на gosuslugi.ru</p>
               <a href="https://www.gosuslugi.ru" target="_blank" rel="noopener noreferrer"
                  className="text-[var(--accent)] text-xs font-medium mt-2 inline-block hover:underline">
                 Открыть Госуслуги →
               </a>
             </div>
-            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-              <p className="font-semibold text-sm mb-1">📞 По телефону МЧС</p>
-              <p className="text-xs text-white/50">+7 (4152) 23-53-62 — Главное управление МЧС по Камчатскому краю</p>
+            <div className="p-4 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)]">
+              <p className="font-semibold text-sm mb-1">По телефону МЧС</p>
+              <p className="text-xs text-[var(--text-muted)]">+7 (4152) 23-53-62 — Главное управление МЧС по Камчатскому краю</p>
             </div>
-            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-              <p className="font-semibold text-sm mb-1">🏢 Лично</p>
-              <p className="text-xs text-white/50">г. Петропавловск-Камчатский, ул. Ленинская, 28</p>
+            <div className="p-4 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)]">
+              <p className="font-semibold text-sm mb-1">Лично</p>
+              <p className="text-xs text-[var(--text-muted)]">г. Петропавловск-Камчатский, ул. Ленинская, 28</p>
             </div>
           </div>
 
           <button
             onClick={() => router.push('/map')}
-            className="w-full py-3 rounded-xl bg-[var(--accent)] text-white font-semibold text-sm hover:opacity-90"
+            className="w-full py-3 rounded-lg bg-[var(--accent)] text-[var(--text-primary)] font-semibold text-sm hover:opacity-90"
           >
             Вернуться к карте
           </button>
@@ -180,23 +180,23 @@ export default function RegisterRoutePage() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[#0a0a0a] text-white">
+    <div className="min-h-[100dvh] bg-[var(--bg-primary)] text-[var(--text-primary)]">
       {/* Шапка */}
-      <div className="sticky top-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-lg border-b border-white/10">
+      <div className="sticky top-0 z-50 bg-[var(--bg-primary)] border-b border-[var(--border)]">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
           <button onClick={() => step > 1 ? setStep((step - 1) as Step) : router.back()}
-                  className="p-1 rounded-lg hover:bg-white/10">
+                  className="p-1 rounded-lg hover:bg-[var(--bg-hover)]">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
             <h1 className="font-bold text-sm">Регистрация маршрута</h1>
-            <p className="text-[10px] text-white/40">Шаг {step} из 4</p>
+            <p className="text-[10px] text-[var(--text-muted)]">Шаг {step} из 4</p>
           </div>
           {/* Прогресс */}
           <div className="flex gap-1">
             {[1, 2, 3, 4].map(s => (
               <div key={s} className={`w-6 h-1 rounded-full transition-colors ${
-                s <= step ? 'bg-[var(--accent)]' : 'bg-white/10'
+                s <= step ? 'bg-[var(--accent)]' : 'bg-[var(--bg-hover)]'
               }`} />
             ))}
           </div>
@@ -213,59 +213,59 @@ export default function RegisterRoutePage() {
             </h2>
 
             <div>
-              <label className="text-xs text-white/40 mb-1 block">Название маршрута *</label>
+              <label className="text-xs text-[var(--text-muted)] mb-1 block">Название маршрута *</label>
               <input
                 type="text"
                 value={routeName}
                 onChange={e => setRouteName(e.target.value)}
                 placeholder="Авачинский перевал"
-                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm
+                className="w-full px-4 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                   focus:border-[var(--accent)] focus:outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label className="text-xs text-white/40 mb-1 block">Описание (необязательно)</label>
+              <label className="text-xs text-[var(--text-muted)] mb-1 block">Описание (необязательно)</label>
               <textarea
                 value={routeDescription}
                 onChange={e => setRouteDescription(e.target.value)}
                 placeholder="Пиначево → Таловский кордон → Авачинский перевал"
                 rows={3}
-                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm
+                className="w-full px-4 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                   focus:border-[var(--accent)] focus:outline-none transition-colors resize-none"
               />
             </div>
 
             <div>
-              <label className="text-xs text-white/40 mb-1 block">Регион</label>
+              <label className="text-xs text-[var(--text-muted)] mb-1 block">Регион</label>
               <input
                 type="text"
                 value={region}
                 onChange={e => setRegion(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm
+                className="w-full px-4 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                   focus:border-[var(--accent)] focus:outline-none transition-colors"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-white/40 mb-1 block">Дата выхода *</label>
+                <label className="text-xs text-[var(--text-muted)] mb-1 block">Дата выхода *</label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm
+                  className="w-full px-4 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                     focus:border-[var(--accent)] focus:outline-none transition-colors"
                 />
               </div>
               <div>
-                <label className="text-xs text-white/40 mb-1 block">Дата возврата *</label>
+                <label className="text-xs text-[var(--text-muted)] mb-1 block">Дата возврата *</label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={e => setEndDate(e.target.value)}
                   min={startDate}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm
+                  className="w-full px-4 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                     focus:border-[var(--accent)] focus:outline-none transition-colors"
                 />
               </div>
@@ -274,7 +274,7 @@ export default function RegisterRoutePage() {
             <button
               onClick={() => setStep(2)}
               disabled={!canNext1}
-              className="w-full py-3 rounded-xl bg-[var(--accent)] text-white font-semibold text-sm
+              className="w-full py-3 rounded-lg bg-[var(--accent)] text-[var(--text-primary)] font-semibold text-sm
                 disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
             >
               Далее
@@ -291,7 +291,7 @@ export default function RegisterRoutePage() {
             </h2>
 
             <div>
-              <label className="text-xs text-white/40 mb-1 block">Количество человек (1-30) *</label>
+              <label className="text-xs text-[var(--text-muted)] mb-1 block">Количество человек (1-30) *</label>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => {
@@ -299,8 +299,8 @@ export default function RegisterRoutePage() {
                     setGroupSize(newSize);
                     if (members.length > newSize) setMembers(members.slice(0, newSize));
                   }}
-                  className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 text-xl font-bold
-                    hover:bg-white/10 transition-colors"
+                  className="w-12 h-12 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-xl font-bold
+                    hover:bg-[var(--bg-hover)] transition-colors"
                 >
                   −
                 </button>
@@ -311,8 +311,8 @@ export default function RegisterRoutePage() {
                     setGroupSize(newSize);
                     if (members.length < newSize) addMember();
                   }}
-                  className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 text-xl font-bold
-                    hover:bg-white/10 transition-colors"
+                  className="w-12 h-12 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-xl font-bold
+                    hover:bg-[var(--bg-hover)] transition-colors"
                 >
                   +
                 </button>
@@ -320,13 +320,13 @@ export default function RegisterRoutePage() {
             </div>
 
             {/* Участники */}
-            <p className="text-xs text-white/30">Участники (необязательно, но полезно для МЧС)</p>
+            <p className="text-xs text-[var(--text-muted)]">Участники (необязательно, но полезно для МЧС)</p>
             {members.map((m, idx) => (
-              <div key={idx} className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-2">
+              <div key={idx} className="p-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-white/30 w-5">#{idx + 1}</span>
+                  <span className="text-xs text-[var(--text-muted)] w-5">#{idx + 1}</span>
                   {members.length > 1 && (
-                    <button onClick={() => removeMember(idx)} className="ml-auto p-1 text-white/30 hover:text-red-400">
+                    <button onClick={() => removeMember(idx)} className="ml-auto p-1 text-[var(--text-muted)] hover:text-red-400">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
@@ -336,7 +336,7 @@ export default function RegisterRoutePage() {
                   value={m.name}
                   onChange={e => updateMember(idx, 'name', e.target.value)}
                   placeholder="ФИО"
-                  className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm
+                  className="w-full px-3 py-2 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                     focus:border-[var(--accent)] focus:outline-none"
                 />
                 <div className="grid grid-cols-2 gap-2">
@@ -345,7 +345,7 @@ export default function RegisterRoutePage() {
                     value={m.phone}
                     onChange={e => updateMember(idx, 'phone', e.target.value)}
                     placeholder="Телефон"
-                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm
+                    className="w-full px-3 py-2 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                       focus:border-[var(--accent)] focus:outline-none"
                   />
                   <input
@@ -353,7 +353,7 @@ export default function RegisterRoutePage() {
                     value={m.birth_year}
                     onChange={e => updateMember(idx, 'birth_year', e.target.value)}
                     placeholder="Год рождения"
-                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm
+                    className="w-full px-3 py-2 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                       focus:border-[var(--accent)] focus:outline-none"
                   />
                 </div>
@@ -363,14 +363,14 @@ export default function RegisterRoutePage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setStep(1)}
-                className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-semibold text-sm
-                  hover:bg-white/10 transition-colors"
+                className="flex-1 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] font-semibold text-sm
+                  hover:bg-[var(--bg-hover)] transition-colors"
               >
                 Назад
               </button>
               <button
                 onClick={() => setStep(3)}
-                className="flex-[2] py-3 rounded-xl bg-[var(--accent)] text-white font-semibold text-sm
+                className="flex-[2] py-3 rounded-lg bg-[var(--accent)] text-[var(--text-primary)] font-semibold text-sm
                   hover:opacity-90 transition-opacity"
               >
                 Далее
@@ -387,14 +387,14 @@ export default function RegisterRoutePage() {
               Контакты
             </h2>
 
-            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+            <div className="p-4 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] space-y-3">
               <p className="text-xs text-[var(--accent)] font-semibold uppercase tracking-wider">Руководитель группы</p>
               <input
                 type="text"
                 value={leaderName}
                 onChange={e => setLeaderName(e.target.value)}
                 placeholder="ФИО *"
-                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white text-sm
+                className="w-full px-4 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                   focus:border-[var(--accent)] focus:outline-none"
               />
               <div className="grid grid-cols-2 gap-2">
@@ -403,7 +403,7 @@ export default function RegisterRoutePage() {
                   value={leaderPhone}
                   onChange={e => setLeaderPhone(e.target.value)}
                   placeholder="Телефон *"
-                  className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white text-sm
+                  className="w-full px-4 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                     focus:border-[var(--accent)] focus:outline-none"
                 />
                 <input
@@ -411,22 +411,22 @@ export default function RegisterRoutePage() {
                   value={leaderEmail}
                   onChange={e => setLeaderEmail(e.target.value)}
                   placeholder="Email"
-                  className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white text-sm
+                  className="w-full px-4 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                     focus:border-[var(--accent)] focus:outline-none"
                 />
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+            <div className="p-4 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] space-y-3">
               <p className="text-xs text-red-400 font-semibold uppercase tracking-wider">
-                Экстренный контакт <span className="text-white/30">(получит уведомление если не вернулись)</span>
+                Экстренный контакт <span className="text-[var(--text-muted)]">(получит уведомление если не вернулись)</span>
               </p>
               <input
                 type="text"
                 value={emergencyName}
                 onChange={e => setEmergencyName(e.target.value)}
                 placeholder="ФИО *"
-                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white text-sm
+                className="w-full px-4 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                   focus:border-[var(--accent)] focus:outline-none"
               />
               <div className="grid grid-cols-2 gap-2">
@@ -435,7 +435,7 @@ export default function RegisterRoutePage() {
                   value={emergencyPhone}
                   onChange={e => setEmergencyPhone(e.target.value)}
                   placeholder="Телефон *"
-                  className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white text-sm
+                  className="w-full px-4 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                     focus:border-[var(--accent)] focus:outline-none"
                 />
                 <input
@@ -443,7 +443,7 @@ export default function RegisterRoutePage() {
                   value={emergencyRelation}
                   onChange={e => setEmergencyRelation(e.target.value)}
                   placeholder="Кем приходится"
-                  className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white text-sm
+                  className="w-full px-4 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                     focus:border-[var(--accent)] focus:outline-none"
                 />
               </div>
@@ -452,16 +452,16 @@ export default function RegisterRoutePage() {
                 value={emergencyTelegram}
                 onChange={e => setEmergencyTelegram(e.target.value)}
                 placeholder="Telegram chat_id (необязательно)"
-                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white text-sm
+                className="w-full px-4 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                   focus:border-[var(--accent)] focus:outline-none"
               />
-              <p className="text-[10px] text-white/30">Для Telegram-уведомлений. Можно узнать через @userinfobot</p>
+              <p className="text-[10px] text-[var(--text-muted)]">Для Telegram-уведомлений. Можно узнать через @userinfobot</p>
               <input
                 type="email"
                 value={emergencyEmail}
                 onChange={e => setEmergencyEmail(e.target.value)}
                 placeholder="Email (необязательно)"
-                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white text-sm
+                className="w-full px-4 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] text-sm
                   focus:border-[var(--accent)] focus:outline-none"
               />
               <label className="flex items-start gap-3 cursor-pointer mt-2">
@@ -471,7 +471,7 @@ export default function RegisterRoutePage() {
                   onChange={e => setContactConsent(e.target.checked)}
                   className="mt-1 w-4 h-4 rounded accent-[var(--accent)]"
                 />
-                <span className="text-xs text-white/60">
+                <span className="text-xs text-[var(--text-secondary)]">
                   Контакт <strong>{emergencyName || '___'}</strong> согласен получать уведомления
                   от TourHab о статусе маршрута (Telegram / Email).
                 </span>
@@ -481,15 +481,15 @@ export default function RegisterRoutePage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setStep(2)}
-                className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-semibold text-sm
-                  hover:bg-white/10 transition-colors"
+                className="flex-1 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] font-semibold text-sm
+                  hover:bg-[var(--bg-hover)] transition-colors"
               >
                 Назад
               </button>
               <button
                 onClick={() => setStep(4)}
                 disabled={!canNext3}
-                className="flex-[2] py-3 rounded-xl bg-[var(--accent)] text-white font-semibold text-sm
+                className="flex-[2] py-3 rounded-lg bg-[var(--accent)] text-[var(--text-primary)] font-semibold text-sm
                   disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
               >
                 Далее
@@ -507,27 +507,27 @@ export default function RegisterRoutePage() {
             </h2>
 
             {/* Сводка */}
-            <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2 text-sm">
-              <p><span className="text-white/40">Маршрут:</span> {routeName}</p>
-              <p><span className="text-white/40">Даты:</span> {startDate} — {endDate}</p>
-              <p><span className="text-white/40">Группа:</span> {groupSize} чел.</p>
-              <p><span className="text-white/40">Руководитель:</span> {leaderName}</p>
-              <p><span className="text-white/40">Экстренный контакт:</span> {emergencyName} ({emergencyPhone})</p>
+            <div className="p-4 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] space-y-2 text-sm">
+              <p><span className="text-[var(--text-muted)]">Маршрут:</span> {routeName}</p>
+              <p><span className="text-[var(--text-muted)]">Даты:</span> {startDate} — {endDate}</p>
+              <p><span className="text-[var(--text-muted)]">Группа:</span> {groupSize} чел.</p>
+              <p><span className="text-[var(--text-muted)]">Руководитель:</span> {leaderName}</p>
+              <p><span className="text-[var(--text-muted)]">Экстренный контакт:</span> {emergencyName} ({emergencyPhone})</p>
             </div>
 
             {/* Disclaimer */}
-            <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30 space-y-3">
+            <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 space-y-3">
               <div className="flex items-start gap-2">
                 <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-semibold text-yellow-400 mb-1">Важно</p>
-                  <p className="text-xs text-white/60 leading-relaxed">
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                     TourHub помогает <strong>подготовить заявку</strong> по форме МЧС.
                     Данная заявка <strong>не является подтверждением</strong> регистрации в МЧС.
                     Для официальной регистрации подайте заявление через портал Госуслуг
                     или лично в Главное управление МЧС России по Камчатскому краю.
                   </p>
-                  <p className="text-xs text-white/40 mt-2">
+                  <p className="text-xs text-[var(--text-muted)] mt-2">
                     TourHab не гарантирует получение уведомления экстренным контактом
                     и не несёт ответственности за реакцию третьих лиц.
                   </p>
@@ -541,7 +541,7 @@ export default function RegisterRoutePage() {
                   onChange={e => setAccepted(e.target.checked)}
                   className="mt-1 w-4 h-4 rounded accent-[var(--accent)]"
                 />
-                <span className="text-xs text-white/60">
+                <span className="text-xs text-[var(--text-secondary)]">
                   Я понимаю что это <strong>не официальная регистрация</strong> и
                  TourHab <strong>не является службой спасения</strong>.
                   Я самостоятельно подам заявку в МЧС.
@@ -556,15 +556,15 @@ export default function RegisterRoutePage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setStep(3)}
-                className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-semibold text-sm
-                  hover:bg-white/10 transition-colors"
+                className="flex-1 py-3 rounded-lg bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--text-primary)] font-semibold text-sm
+                  hover:bg-[var(--bg-hover)] transition-colors"
               >
                 Назад
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={!canSubmit || submitting}
-                className="flex-[2] py-3 rounded-xl bg-[var(--accent)] text-white font-semibold text-sm
+                className="flex-[2] py-3 rounded-lg bg-[var(--accent)] text-[var(--text-primary)] font-semibold text-sm
                   disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-opacity
                   flex items-center justify-center gap-2"
               >
