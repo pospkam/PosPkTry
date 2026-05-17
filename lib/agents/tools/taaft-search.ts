@@ -21,9 +21,10 @@ export async function searchExternalTools(task: string, limit = 5): Promise<Exte
     `SELECT id, slug, name, description, url, category, tags,
             is_free, api_available, rating, use_count
      FROM external_tools
-     WHERE search_vector @@ plainto_tsquery('simple', $1)
+     WHERE verified = TRUE
+       AND (search_vector @@ plainto_tsquery('simple', $1)
         OR name ILIKE $2
-        OR description ILIKE $2
+        OR description ILIKE $2)
      ORDER BY
        CASE WHEN name ILIKE $2 THEN 1 ELSE 2 END,
        use_count DESC

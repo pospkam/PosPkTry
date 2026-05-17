@@ -112,8 +112,7 @@ export async function getGuardianContext(placeName: string): Promise<string> {
       : p.name;
     parts.push(header);
 
-    if (p.altitude_m) parts.push(`Высота ${p.altitude_m} м.`);
-
+    // Алерты первыми — безопасность важнее описания
     if (p.alert_message) {
       parts.push(`Алерт: ${p.alert_message}`);
     } else if (p.active_alerts?.length) {
@@ -123,6 +122,8 @@ export async function getGuardianContext(placeName: string): Promise<string> {
     if (p.tourists_today !== null && p.capacity_per_day) {
       parts.push(`Сегодня посетило: ${p.tourists_today} чел. (норма ${p.capacity_per_day}/день).`);
     }
+
+    if (p.altitude_m) parts.push(`Высота ${p.altitude_m} м.`);
 
     if (p.nearest_medical_km) {
       parts.push(`До медпомощи: ${p.nearest_medical_km} км.`);
@@ -135,6 +136,8 @@ export async function getGuardianContext(placeName: string): Promise<string> {
     if (p.hazard_types?.length) {
       const hazards = p.hazard_types.map((h) => HAZARD_LABELS[h] ?? h).join(', ');
       parts.push(`Опасности: ${hazards}.`);
+    } else if (!p.altitude_m && !p.nearest_medical_km && !p.sat_communicator_required) {
+      parts.push('Профиль безопасности для этого места не оцифрован.');
     }
 
     if (p.description) {
