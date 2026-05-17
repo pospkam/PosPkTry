@@ -12,8 +12,8 @@
 | Frontend | Next.js 15 App Router, TypeScript strict, Tailwind CSS |
 | Database | PostgreSQL — прямой SQL (`lib/database.ts`, `lib/db-pool.ts`), без Prisma |
 | Auth | JWT — `lib/auth.ts`, middleware — `lib/auth/middleware.ts` |
-| Deploy | Timeweb Cloud → `tourhab.ru` (App ID: 175477) |
-| CI/CD | GitHub → автодеплой при push в `main` |
+| Deploy | Timeweb Cloud — приложение **Fair Polydeuces** (репо: `tourhabk-ui/pos`) |
+| CI/CD | push в `pospkam/PosPkTry main` → `.github/workflows/sync-to-tourhabk.yml` → `tourhabk-ui/pos` → Timeweb автодеплой |
 
 **Масштаб:** 94 стр / 256 API routes / 119 компонентов / 8 хабов / 260 маршрутов БД
 
@@ -240,11 +240,17 @@ guide_certifications (112)         ← аттестации гидов
 ```bash
 npx tsc --noEmit      # 0 ошибок
 npx vitest run        # 214 тестов зелёные
-git push origin main  # → автодеплой Timeweb
+git push origin main  # → sync-to-tourhabk.yml → tourhabk-ui/pos → Timeweb автодеплой
 ```
 
-Переменные окружения — на Timeweb Cloud панели, не в коде.
-Build config: `ignoreBuildErrors=true` на Timeweb (Docker), локально — строгая проверка.
+**Схема деплоя (май 2026):**
+1. Push в `pospkam/PosPkTry main`
+2. GitHub Actions `.github/workflows/sync-to-tourhabk.yml` синхронизирует в `tourhabk-ui/pos main`
+3. Timeweb видит пуш → собирает Docker → `start.js` накатывает миграции → поднимает сервер
+
+**Timeweb:** приложение **Fair Polydeuces**, репо `tourhabk-ui/pos`, ветка `main`
+**Переменные окружения:** в настройках приложения на Timeweb Cloud панели, не в коде.
+**Build config:** `ignoreBuildErrors=true` на Timeweb (Docker), локально — строгая проверка.
 
 ---
 
@@ -286,7 +292,7 @@ GitHub Actions: `.github/workflows/cron-watchdog.yml`, `cron-editor.yml`, `cron-
 - Tracking: таблица `_migrations` (name UNIQUE, applied_at)
 - Применение: `npm run migrate` (запускает `lib/database/migrate.ts`)
   - Локально: `DATABASE_URL=<local> npm run migrate`
-  - На проде: SSH в Timeweb, `cd /root/PosPkTry && npm run migrate`
+  - На проде: миграции применяются **автоматически** при каждом деплое через `start.js`
 - **НИКОГДА** не применять миграции через HTTP endpoint
 - Файлы с `CREATE INDEX CONCURRENTLY` автоматически определяются и применяются вне транзакции (без BEGIN/COMMIT), statement-by-statement
 - Все миграции должны быть идемпотентны (`IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`)
