@@ -136,6 +136,7 @@ export default function RoutesPageClient() {
   const [routes,    setRoutes]    = useState<RouteItem[]>([]);
   const [meta,      setMeta]      = useState({ total: 0, pages: 1 });
   const [loading,   setLoading]   = useState(true);
+  const [dbError,   setDbError]   = useState(false);
   const [mapRoutes, setMapRoutes] = useState<MapRoute[]>([]);
   const [mapLoading, setMapLoading] = useState(false);
 
@@ -172,8 +173,13 @@ export default function RoutesPageClient() {
       if (json.success) {
         setRoutes(json.data);
         setMeta({ total: json.meta.total, pages: json.meta.pages });
+        setDbError(false);
+      } else {
+        setDbError(true);
       }
-    } catch { /* silent */ }
+    } catch {
+      setDbError(true);
+    }
     setLoading(false);
   }, []);
 
@@ -462,6 +468,11 @@ export default function RoutesPageClient() {
                 {Array.from({ length: LIMIT }).map((_, i) => (
                   <div key={i} className="ds-skeleton rounded-lg" style={{ aspectRatio: kind === 'place' ? '4/3' : undefined, height: kind === 'route' ? '5.5rem' : undefined }} />
                 ))}
+              </div>
+            ) : dbError ? (
+              <div className="py-24 text-center">
+                <p className="text-[var(--danger)] font-semibold mb-2">Ошибка загрузки данных</p>
+                <p className="text-sm text-[var(--text-muted)]">Проверьте DATABASE_URL в настройках приложения</p>
               </div>
             ) : routes.length === 0 ? (
               <div className="py-24 text-center">
