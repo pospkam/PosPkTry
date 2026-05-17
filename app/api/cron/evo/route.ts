@@ -1,18 +1,16 @@
 /**
  * GET /api/cron/evo
  *
- * Evo System — Growth Scan + Evolution Loop.
- * Запускает диагностику проекта и применяет фиксы.
+ * Evo System — параллельная оркестрация агентов.
+ * Growth + Rescue + Evolver Analysis запускаются одновременно.
+ * Evolution Loop — последовательно (пишет фиксы в БД).
  *
  * URL: https://tourhab.ru/api/cron/evo?secret=<CRON_SECRET>
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeCompare } from '@/lib/security/timing-safe';
-import { runGrowthScan } from '@/lib/agents/evo/growth-agent';
-import { runEvolutionLoop } from '@/lib/agents/evo/evolution-loop';
-import { runRescueScan } from '@/lib/agents/evo/rescue-agent';
-import { runEvolverAnalysis } from '@/lib/agents/evo/evolver-analysis';
+import { runEvoOrchestrator } from '@/lib/agents/orchestrator';
 import { logAgentRun } from '@/lib/agents/run-logger';
 
 export const dynamic = 'force-dynamic';
@@ -35,44 +33,22 @@ export async function GET(request: NextRequest) {
   const startedAt = new Date();
 
   try {
-    // 1. Growth Scan — диагностика
-    const scanResult = await runGrowthScan(scanType);
+    const result = await runEvoOrchestrator(scanType);
 
-    // 2. Evolution Loop — применяем фиксы
-    const evoResult = await runEvolutionLoop();
-
-    // 3. Rescue Scan — проактивная безопасность
-    const rescueResult = await runRescueScan();
-
-    // 4. Evolver Analysis — петля обратной связи: ошибки → инструменты
-    const evolverResult = await runEvolverAnalysis();
-
-    // Log
     void logAgentRun({
       agent_id: 'evo',
-      status: 'success',
+      status: result.errors.length === 0 ? 'success' : 'partial',
       started_at: startedAt,
-      duration_ms: Date.now() - startedAt.getTime(),
-      metadata: {
-        scan: scanResult,
-        evolution: evoResult,
-        rescue: rescueResult,
-        evolver: evolverResult,
-      } as unknown as Record<string, unknown>,
+      duration_ms: result.duration_ms,
+      metadata: result as unknown as Record<string, unknown>,
     });
 
-    // Telegram notification if issues found
-    if (scanResult.issues.length > 0) {
-      void tgNotify(scanResult, evoResult, rescueResult);
+    const scanResult = result.scan as { issues?: Array<{ severity: string; title: string }> } | null;
+    if (scanResult?.issues && scanResult.issues.length > 0) {
+      void tgNotify(result);
     }
 
-    return NextResponse.json({
-      success: true,
-      scan: scanResult,
-      evolution: evoResult,
-      rescue: rescueResult,
-      evolver: evolverResult,
-    });
+    return NextResponse.json({ success: true, ...result });
   } catch (err) {
     void logAgentRun({
       agent_id: 'evo',
@@ -90,21 +66,24 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function tgNotify(scan: unknown, evo: unknown, rescue: unknown): Promise<void> {
+async function tgNotify(result: { scan: unknown; evolution: unknown; rescue: unknown; errors: string[] }): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
   if (!token || !chatId) return;
 
-  const s = scan as { issues: Array<{ severity: string; title: string }>; duration_ms: number };
-  const e = evo as { processed: number; auto_fixes: number };
-  const r = rescue as { alerts: Array<{ severity: string; title: string }> };
+  const s = result.scan as { issues?: Array<{ severity: string; title: string }>; duration_ms?: number } | null;
+  const e = result.evolution as { processed?: number; auto_fixes?: number } | null;
+  const r = result.rescue as { alerts?: Array<{ severity: string; title: string }> } | null;
 
-  const critical = s.issues.filter(i => i.severity === 'critical' || i.severity === 'high').length;
-  const rescueAlerts = r.alerts.filter(a => a.severity === 'critical' || a.severity === 'warning').length;
-  const text = `<b>Evo Scan</b> — ${s.issues.length} проблем (${critical} критичных)\n` +
-    `Эволюция: обработано ${e.processed}, автофиксов: ${e.auto_fixes}\n` +
+  const issues = s?.issues ?? [];
+  const critical = issues.filter(i => i.severity === 'critical' || i.severity === 'high').length;
+  const rescueAlerts = (r?.alerts ?? []).filter(a => a.severity === 'critical' || a.severity === 'warning').length;
+
+  const text = `<b>Evo Scan</b> — ${issues.length} проблем (${critical} критичных)\n` +
+    `Эволюция: обработано ${e?.processed ?? 0}, автофиксов: ${e?.auto_fixes ?? 0}\n` +
     (rescueAlerts > 0 ? `<b>Спасатель: ${rescueAlerts} алертов</b>\n` : '') +
-    `Время: ${Math.round(s.duration_ms / 1000)}с`;
+    (result.errors.length > 0 ? `Ошибки: ${result.errors.join(', ')}\n` : '') +
+    `Время: ${Math.round((s?.duration_ms ?? 0) / 1000)}с`;
 
   try {
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
