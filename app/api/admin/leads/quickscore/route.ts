@@ -27,12 +27,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ updated: 0, message: 'Все лиды уже оценены' });
   }
 
-  let updated = 0;
-  for (const row of unscored.rows) {
-    const score = computeQuickScore(row.name, row.phone, row.comment, row.source_data);
-    await pool.query(`UPDATE leads SET ai_score = $1 WHERE id = $2`, [score, row.id]);
-    updated++;
-  }
+  // Считаем все скоры синхронно (pure function), потом один batch UPDATE
+  const scored = unscored.rows.map(row => ({
+    id: row.id,
+    score: computeQuickScore(row.name, row.phone, row.comment, row.source_data),
+  }));
 
-  return NextResponse.json({ updated, message: `Обновлено ${updated} лидов` });
+  await pool.query(
+    `UPDATE leads SET ai_score = v.score
+     FROM (SELECT UNNEST($1::uuid[]) AS id, UNNEST($2::int[]) AS score) v
+     WHERE leads.id = v.id`,
+    [scored.map(r => r.id), scored.map(r => r.score)],
+  );
+
+  return NextResponse.json({ updated: scored.length, message: `Обновлено ${scored.length} лидов` });
 }
