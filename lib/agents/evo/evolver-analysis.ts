@@ -7,6 +7,8 @@ export interface EvolverAnalysisResult {
   analyzed: number;
   proposals: number;
   external_tools_found: number;
+  outcomes_analyzed: number;
+  avg_kuzmich_score: number | null;
   skipped: boolean;
   duration_ms: number;
 }
@@ -41,7 +43,7 @@ export async function runEvolverAnalysis(): Promise<EvolverAnalysisResult> {
   if (lastRunRows.length > 0) {
     const elapsed = Date.now() - new Date(lastRunRows[0].updated_at).getTime();
     if (elapsed < COOLDOWN_HOURS * 60 * 60 * 1000) {
-      return { analyzed: 0, proposals: 0, external_tools_found: 0, skipped: true, duration_ms: 0 };
+      return { analyzed: 0, proposals: 0, external_tools_found: 0, outcomes_analyzed: 0, avg_kuzmich_score: null, skipped: true, duration_ms: 0 };
     }
   }
 
@@ -62,13 +64,11 @@ export async function runEvolverAnalysis(): Promise<EvolverAnalysisResult> {
      LIMIT 15`,
   );
 
-  if (stats.length === 0) {
-    await markLastRun(0);
-    return { analyzed: 0, proposals: 0, external_tools_found: 0, skipped: false, duration_ms: Date.now() - startedAt };
-  }
-
-  // 2. AI analysis
-  const proposals = await analyzeWithAI(stats);
+  // 2. Outcomes analysis — параллельно с AI-анализом логов
+  const [proposals, outcomesResult] = await Promise.all([
+    stats.length > 0 ? analyzeWithAI(stats) : Promise.resolve([] as AiProposal[]),
+    analyzeKuzmichOutcomes(),
+  ]);
 
   // 3. For each proposal with need_external_tool, search the catalog and notify
   const externalToolsFound = await processProposals(proposals);
@@ -80,6 +80,8 @@ export async function runEvolverAnalysis(): Promise<EvolverAnalysisResult> {
     analyzed: stats.length,
     proposals: proposals.length,
     external_tools_found: externalToolsFound,
+    outcomes_analyzed: outcomesResult.count,
+    avg_kuzmich_score: outcomesResult.avg_score,
     skipped: false,
     duration_ms: Date.now() - startedAt,
   };
@@ -156,6 +158,87 @@ async function processProposals(proposals: AiProposal[]): Promise<number> {
   }
 
   return externalToolsFound;
+}
+
+interface OutcomesAnalysisResult {
+  count: number;
+  avg_score: number | null;
+}
+
+async function analyzeKuzmichOutcomes(): Promise<OutcomesAnalysisResult> {
+  // Читаем outcome-записи за последние 7 дней
+  const { rows } = await pool.query<{ compiled_truth: string; created_at: string }>(
+    `SELECT compiled_truth, created_at
+     FROM agent_knowledge
+     WHERE agent_id = 'kuzmich'
+       AND type = 'outcome'
+       AND created_at > NOW() - INTERVAL '7 days'
+     ORDER BY created_at DESC
+     LIMIT 50`,
+  );
+
+  if (rows.length === 0) return { count: 0, avg_score: null };
+
+  // Извлекаем оценки из текста "Оценка N/10"
+  const scores: number[] = [];
+  const lowQuality: string[] = [];
+
+  for (const row of rows) {
+    const match = row.compiled_truth.match(/Оценка (\d+)\/10/);
+    if (!match) continue;
+    const score = parseInt(match[1]);
+    scores.push(score);
+    if (score < 7) lowQuality.push(row.compiled_truth.slice(0, 300));
+  }
+
+  if (scores.length === 0) return { count: rows.length, avg_score: null };
+
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+
+  // Если средний балл низкий — просим AI синтезировать проблему
+  if (avg < 7 && lowQuality.length >= 3) {
+    const synthesis = await callAIFast([{
+      role: 'user',
+      content: `Ты анализируешь качество ответов AI-бота Кузьмич (Хранитель Камчатки).
+Вот ${lowQuality.length} низкооценённых ответов (score < 7/10) за последнюю неделю:
+
+${lowQuality.slice(0, 10).join('\n---\n')}
+
+Средний балл: ${avg.toFixed(1)}/10.
+
+Определи 2-3 главные причины низкого качества. Что именно идёт не так?
+Предложи конкретное изменение системного промпта или инструментов.
+Верни JSON: {"main_issues":["..."],"prompt_suggestion":"..."}`,
+    }]);
+
+    if (synthesis) {
+      const jsonMatch = synthesis.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        // Сохраняем синтез в agent_memory для будущего ручного применения
+        await pool.query(
+          `INSERT INTO agent_memory (agent_id, memory_type, key, value, source)
+           VALUES ('evo', 'proposal', 'kuzmich_quality', $1, 'outcomes_analysis')
+           ON CONFLICT (agent_id, memory_type, key)
+           DO UPDATE SET value = $1, updated_at = NOW()`,
+          [JSON.stringify({ avg_score: avg, sample_count: scores.length, synthesis: jsonMatch[0] })],
+        );
+
+        // Telegram-алерт если качество заметно упало
+        const chatId = process.env.TELEGRAM_CHAT_ID;
+        if (chatId && avg < 6) {
+          void telegramService.sendMessage({
+            chatId,
+            text: `<b>Outcomes Alert</b> — Кузьмич за неделю\n` +
+              `Средний балл: <b>${avg.toFixed(1)}/10</b> (${scores.length} оценок)\n` +
+              `Синтез проблем сохранён в agent_memory → ключ kuzmich_quality`,
+            parseMode: 'HTML',
+          });
+        }
+      }
+    }
+  }
+
+  return { count: rows.length, avg_score: parseFloat(avg.toFixed(1)) };
 }
 
 async function markLastRun(proposalsCount: number): Promise<void> {
