@@ -5,6 +5,7 @@ import { FinanceMetricsGrid } from '@/components/admin/Finance/FinanceMetricsGri
 import { RevenueChart } from '@/components/admin/Finance/RevenueChart';
 import { PayoutsManager } from '@/components/admin/Finance/PayoutsManager';
 import { DollarSign, BarChart, Banknote } from 'lucide-react';
+import { BinanceCard } from '@/components/admin/Finance/BinanceCard';
 
 type TabType = 'overview' | 'payouts';
 
@@ -68,7 +69,12 @@ export default function AdminFinanceClient() {
         </div>
       )}
 
-      {activeTab === 'payouts' && <PayoutsManager />}
+      {activeTab === 'payouts' && (
+        <div className="space-y-5">
+          <BinanceCard />
+          <PayoutsManager />
+        </div>
+      )}
     </div>
   );
 }
