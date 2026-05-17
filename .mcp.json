@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "lazyweb": {
+      "type": "sse",
+      "url": "https://www.lazyweb.com/mcp/sse"
+    }
+  }
+}
