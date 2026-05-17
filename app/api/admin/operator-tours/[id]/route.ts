@@ -154,13 +154,16 @@ export async function PATCH(
     );
   }
 
-  // Обновляем теги
+  // Обновляем теги — один DELETE + один batch INSERT через UNNEST
   if (tags !== undefined) {
     await query(`DELETE FROM operator_tour_tags WHERE tour_id = $1`, [tourId]);
-    for (const tag of tags) {
+    if (tags.length > 0) {
+      const normalized = tags.map(t => t.trim().toLowerCase());
       await query(
-        `INSERT INTO operator_tour_tags (tour_id, tag) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-        [tourId, tag.trim().toLowerCase()]
+        `INSERT INTO operator_tour_tags (tour_id, tag)
+         SELECT $1, UNNEST($2::text[])
+         ON CONFLICT DO NOTHING`,
+        [tourId, normalized],
       );
     }
   }
