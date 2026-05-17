@@ -12,6 +12,7 @@ import { timingSafeCompare } from '@/lib/security/timing-safe';
 import { runGrowthScan } from '@/lib/agents/evo/growth-agent';
 import { runEvolutionLoop } from '@/lib/agents/evo/evolution-loop';
 import { runRescueScan } from '@/lib/agents/evo/rescue-agent';
+import { runEvolverAnalysis } from '@/lib/agents/evo/evolver-analysis';
 import { logAgentRun } from '@/lib/agents/run-logger';
 
 export const dynamic = 'force-dynamic';
@@ -43,6 +44,9 @@ export async function GET(request: NextRequest) {
     // 3. Rescue Scan — проактивная безопасность
     const rescueResult = await runRescueScan();
 
+    // 4. Evolver Analysis — петля обратной связи: ошибки → инструменты
+    const evolverResult = await runEvolverAnalysis();
+
     // Log
     void logAgentRun({
       agent_id: 'evo',
@@ -53,6 +57,7 @@ export async function GET(request: NextRequest) {
         scan: scanResult,
         evolution: evoResult,
         rescue: rescueResult,
+        evolver: evolverResult,
       } as unknown as Record<string, unknown>,
     });
 
@@ -66,6 +71,7 @@ export async function GET(request: NextRequest) {
       scan: scanResult,
       evolution: evoResult,
       rescue: rescueResult,
+      evolver: evolverResult,
     });
   } catch (err) {
     void logAgentRun({
