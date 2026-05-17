@@ -152,34 +152,44 @@ export async function GET(req: NextRequest) {
     summary: { high: 0, medium: 0, low: 0 },
   };
 
-  // Info checks
-  for (const c of INFO_CHECKS) {
-    try {
-      const { rows } = await pool.query(c.sql);
-      report.info.push({ id: c.id, title: c.title, rows });
-    } catch (e) {
-      report.info.push({ id: c.id, title: c.title, rows: [], error: (e as Error).message });
+  // Info checks — параллельно
+  const infoResults = await Promise.allSettled(INFO_CHECKS.map(c => pool.query(c.sql)));
+  for (let i = 0; i < INFO_CHECKS.length; i++) {
+    const c = INFO_CHECKS[i];
+    const r = infoResults[i];
+    if (r.status === 'fulfilled') {
+      report.info.push({ id: c.id, title: c.title, rows: r.value.rows });
+    } else {
+      report.info.push({ id: c.id, title: c.title, rows: [], error: (r.reason as Error).message });
     }
   }
 
-  // Issue checks
-  for (const c of ISSUE_CHECKS) {
-    try {
-      const { rows: cr } = await pool.query(c.countSql);
-      const count = cr[0]?.n ?? 0;
-      const samplesRows = count > 0 ? (await pool.query(c.sampleSql, [samples])).rows : [];
-      report.issues.push({ id: c.id, title: c.title, severity: c.severity, count, samples: samplesRows });
-      if (count > 0) report.summary[c.severity] += count;
-    } catch (e) {
-      report.issues.push({
-        id: c.id,
-        title: c.title,
-        severity: c.severity,
-        count: 0,
-        samples: [],
-        error: (e as Error).message,
-      });
+  // Issue checks — сначала все count-запросы параллельно, потом нужные sample-запросы параллельно
+  const countResults = await Promise.allSettled(ISSUE_CHECKS.map(c => pool.query(c.countSql)));
+  const counts = countResults.map((r, i) =>
+    r.status === 'fulfilled' ? (r.value.rows[0]?.n ?? 0) : null
+  );
+
+  const sampleResults = await Promise.allSettled(
+    ISSUE_CHECKS.map((c, i) =>
+      counts[i] !== null && counts[i] > 0
+        ? pool.query(c.sampleSql, [samples])
+        : Promise.resolve({ rows: [] as unknown[] }),
+    ),
+  );
+
+  for (let i = 0; i < ISSUE_CHECKS.length; i++) {
+    const c = ISSUE_CHECKS[i];
+    const cr = countResults[i];
+    const sr = sampleResults[i];
+    if (cr.status === 'rejected') {
+      report.issues.push({ id: c.id, title: c.title, severity: c.severity, count: 0, samples: [], error: (cr.reason as Error).message });
+      continue;
     }
+    const count = counts[i] ?? 0;
+    const samplesRows = sr.status === 'fulfilled' ? sr.value.rows : [];
+    report.issues.push({ id: c.id, title: c.title, severity: c.severity, count, samples: samplesRows });
+    if (count > 0) report.summary[c.severity] += count;
   }
 
   if (format === 'html') {
