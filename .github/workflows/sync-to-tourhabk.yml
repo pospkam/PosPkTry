@@ -1,0 +1,19 @@
+name: Sync to tourhabk-ui/pos
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to tourhabk-ui/pos
+        run: |
+          git remote add tourhabk "https://pospkam:${{ secrets.TOURHABK_PAT }}@github.com/tourhabk-ui/pos.git"
+          git push --force tourhabk main:main
