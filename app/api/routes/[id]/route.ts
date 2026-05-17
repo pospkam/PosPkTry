@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { pool } from '@/lib/db-pool';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,9 @@ export async function GET(
     if (!result.rows[0]) {
       return NextResponse.json({ success: false, error: 'Маршрут не найден' }, { status: 404 });
     }
+
+    // Increment view count (fire-and-forget)
+    pool.query('UPDATE kamchatka_routes SET view_count = view_count + 1 WHERE id = $1', [id]).catch(() => {});
 
     const r = result.rows[0];
     const payload = (r.payload as Record<string, unknown>) ?? {};
