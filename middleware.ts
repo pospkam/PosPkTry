@@ -81,6 +81,7 @@ const PUBLIC_API_ROUTES: Record<string, PublicApiMethods> = {
   '/api/health': ['GET'],              // health checks — monitoring/infra
   '/api/test-deploy': ['GET'],         // deploy verification
   '/api/setup-fishingkam-widget': ['GET'], // one-time widget setup for fishingkam
+  '/api/agent-market': ['GET'],        // HTTP 402 платный API для внешних AI-агентов
 };
 
 const API_ROLE_REQUIREMENTS: Record<string, AuthRole> = {
