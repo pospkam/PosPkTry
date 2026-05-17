@@ -217,7 +217,7 @@ export async function GET(request: NextRequest) {
 
     const total = Number(countResult.rows[0]?.total ?? 0);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: dataResult.rows.map(r => {
         const payload = (r.payload as Record<string, unknown>) ?? {};
@@ -254,6 +254,8 @@ export async function GET(request: NextRequest) {
         pages: Math.ceil(total / limit),
       },
     });
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    return response;
   } catch (error) {
     console.error('[/api/routes] DB error:', error);
     return NextResponse.json(
