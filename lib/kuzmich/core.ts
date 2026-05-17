@@ -1436,6 +1436,20 @@ const KUZMICH_TOOLS: ToolDefinition[] = [
       parameters: { type: 'object', properties: {}, required: [] },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'search_taaft',
+      description: 'Найти внешний AI-инструмент или онлайн-сервис для специфической задачи: определить растение или животное по фото, транскрибировать аудио, обработать GPX-трек, перевести текст, создать аудиогид, проверить лавинную обстановку. Используй когда нужен специализированный инструмент за пределами TourHab.',
+      parameters: {
+        type: 'object',
+        properties: {
+          task: { type: 'string', description: 'Что нужно сделать (на русском): например "определить растение на фото", "транскрибировать аудиозапись", "анализировать GPX-трек"' },
+        },
+        required: ['task'],
+      },
+    },
+  },
 ];
 
 type ToolMsg =
@@ -1474,6 +1488,12 @@ async function executeTool(name: string, args: Record<string, string>): Promise<
     }
     if (name === 'get_weather') {
       return (await fetchWeather()) || 'Погода временно недоступна.';
+    }
+    if (name === 'search_taaft') {
+      const { searchExternalTools, trackToolUsage, formatToolsForKuzmich } = await import('@/lib/agents/tools/taaft-search');
+      const tools = await searchExternalTools(args.task ?? args.query ?? '');
+      void Promise.all(tools.slice(0, 2).map((t) => trackToolUsage(t.slug)));
+      return formatToolsForKuzmich(tools);
     }
     return 'Неизвестный инструмент.';
   } catch {
