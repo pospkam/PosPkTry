@@ -78,9 +78,10 @@ export function Header() {
         {[
           { href: '/marketplace', label: 'Туры' },
           { href: '/hub/fishing', label: 'Рыбалка' },
-          { href: '/routes',            label: 'Маршруты' },
-          { href: '/map',               label: 'Карта' },
-          { href: '/operators',         label: 'Операторы' },
+          { href: '/routes',      label: 'Маршруты' },
+          { href: '/collections', label: 'Подборки' },
+          { href: '/map',         label: 'Карта' },
+          { href: '/operators',   label: 'Операторы' },
         ].map(item => (
           <Link
             key={item.href}
