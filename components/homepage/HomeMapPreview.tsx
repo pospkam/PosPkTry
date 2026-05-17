@@ -77,11 +77,25 @@ export function HomeMapPreview() {
   const [filteredRoutes, setFilteredRoutes] = useState<RoutePoint[]>([]);
   const [allRoutes, setAllRoutes] = useState<RoutePoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [visible, setVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { rootMargin: '200px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!visible) return;
     setActiveFilter(null);
     setLoading(true);
-    fetch(`/api/routes?hasCoords=true&limit=500&sort=title&kind=${kind}`)
+    fetch(`/api/routes?hasCoords=true&limit=150&sort=recommended&kind=${kind}`)
       .then(r => r.ok ? r.json() : { data: [] })
       .then(d => {
         const points = (d.data ?? [])
@@ -158,7 +172,7 @@ export function HomeMapPreview() {
   }), [filteredRoutes, kind]);
 
   return (
-    <div className="relative h-full min-h-[400px]">
+    <div ref={containerRef} className="relative h-full min-h-[400px]">
       {/* LeafletMap — на заднем плане */}
       <LeafletMap
         center={[53.0, 158.7]}
