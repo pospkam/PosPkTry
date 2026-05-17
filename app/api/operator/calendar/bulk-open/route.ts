@@ -95,38 +95,43 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    let opened = 0;
+    let datesToInsert = dates;
     let skipped = 0;
 
-    for (const date of dates) {
-      if (skipExisting) {
-        // Проверяем, есть ли уже запись с ненулевыми слотами
-        const { rows: exist } = await pool.query(
-          `SELECT available_slots FROM tour_availability
-           WHERE operator_tour_id = $1 AND date = $2 AND is_cancelled = false LIMIT 1`,
-          [tourId, date]
-        );
-        if (exist.length > 0 && exist[0].available_slots > 0) {
-          skipped++;
-          continue;
-        }
-      }
+    if (skipExisting) {
+      // Один запрос — получаем все уже открытые даты в диапазоне
+      const { rows: existing } = await pool.query<{ date: string }>(
+        `SELECT date::text FROM tour_availability
+         WHERE operator_tour_id = $1
+           AND date = ANY($2::date[])
+           AND is_cancelled = false
+           AND available_slots > 0`,
+        [tourId, dates],
+      );
+      const existingSet = new Set(existing.map(r => r.date));
+      datesToInsert = dates.filter(d => !existingSet.has(d));
+      skipped = dates.length - datesToInsert.length;
+    }
 
+    if (datesToInsert.length > 0) {
+      // Один batch INSERT для всех дат через UNNEST
       await pool.query(
         `INSERT INTO tour_availability (
            operator_tour_id, date, day_of_week, available_slots, booked_slots,
            base_price_override, is_cancelled, weather_status
-         ) VALUES ($1, $2, EXTRACT(DOW FROM $2::date)::int, $3, 0, $4, false, 'unknown')
+         )
+         SELECT $1, d::date, EXTRACT(DOW FROM d::date)::int, $2, 0, $3, false, 'unknown'
+         FROM UNNEST($4::text[]) AS d
          ON CONFLICT (operator_tour_id, date) DO UPDATE SET
            available_slots     = EXCLUDED.available_slots,
            base_price_override = EXCLUDED.base_price_override,
            is_cancelled        = false,
            updated_at          = NOW()`,
-        [tourId, date, slots, priceOverride ?? null]
+        [tourId, slots, priceOverride ?? null, datesToInsert],
       );
-      opened++;
     }
 
+    const opened = datesToInsert.length;
     return NextResponse.json({
       success: true,
       data:    { opened, skipped, total: dates.length },
