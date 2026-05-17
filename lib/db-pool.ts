@@ -8,7 +8,11 @@
 import { Pool } from 'pg';
 import { config } from '@/lib/config';
 
-const useSSL = config.database.ssl || process.env.NODE_ENV === 'production';
+// DATABASE_SSL=false явно отключает SSL (даже в production).
+// По умолчанию — SSL включён в production, выключен в dev.
+const useSSL = process.env.DATABASE_SSL === 'false'
+  ? false
+  : (config.database.ssl || process.env.NODE_ENV === 'production');
 
 function normalizeDatabaseUrl(raw: string): string {
   const trimmed = raw.trim();
