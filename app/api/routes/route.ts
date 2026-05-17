@@ -255,19 +255,10 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    console.error('[/api/routes] DB error:', error);
     return NextResponse.json(
-      {
-        success: true,
-        data: [],
-        meta: {
-          total: 0,
-          page,
-          limit,
-          pages: 0,
-        },
-        degraded: true,
-      },
-      { status: 200 }
+      { success: false, error: 'Ошибка базы данных. Проверьте DATABASE_URL в env.' },
+      { status: 503 }
     );
   }
 }
