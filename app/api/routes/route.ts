@@ -41,8 +41,6 @@ function pickPrimaryImage(payload: Record<string, unknown>): string | null {
 
 /**
  * Красивые фото-плейсхолдеры по категориям.
- * Используются когда у оператора нет фото или оно бытового качества.
- * Фото лежат в public/images/partners/kamchatintour/
  */
 const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
   vulkani:              '/images/partners/kamchatintour/volcanoes.webp',
@@ -62,15 +60,9 @@ const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
   mountains:            '/images/partners/kamchatintour/volcanoes.webp',
 };
 
-/**
- * Получить фоллбэк-фото по категории.
- * Если категории нет в маппинге — пробуем подобрать по ключевым словам.
- */
 function getCategoryFallbackImage(category: string | null): string | null {
   if (!category) return null;
   if (CATEGORY_FALLBACK_IMAGES[category]) return CATEGORY_FALLBACK_IMAGES[category];
-
-  // Подбор по ключевым словам в категории/активности/типе локации (не строгий)
   const lower = category.toLowerCase();
   if (lower.includes('вулкан') || lower.includes('volcan')) return CATEGORY_FALLBACK_IMAGES.vulkani;
   if (lower.includes('терм') || lower.includes('thermal') || lower.includes('источник')) return CATEGORY_FALLBACK_IMAGES.termalnye_istochniki;
@@ -84,8 +76,33 @@ function getCategoryFallbackImage(category: string | null): string | null {
   if (lower.includes('озер') || lower.includes('lake')) return CATEGORY_FALLBACK_IMAGES.lakes;
   if (lower.includes('река') || lower.includes('river')) return CATEGORY_FALLBACK_IMAGES.rivers;
   if (lower.includes('гор') || lower.includes('mountain')) return CATEGORY_FALLBACK_IMAGES.mountains;
-
   return null;
+}
+
+/**
+ * Определение опасностей на основе данных точки/маршрута.
+ */
+function resolveHazards(row: any): string[] {
+  const hazards: string[] = [];
+  const payload = row.payload || {};
+  
+  if (row.volcano_status && row.volcano_status !== 'green' && row.volcano_status !== 'normal') {
+    hazards.push('volcano_activity');
+  }
+  if (payload.has_bears || row.description?.toLowerCase().includes('медвед')) {
+    hazards.push('bears_active');
+  }
+  if (payload.difficulty === 'hard' || payload.difficulty === 'extreme') {
+    hazards.push('high_difficulty');
+  }
+  if (payload.requires_permit || row.description?.toLowerCase().includes('разрешен') || row.description?.toLowerCase().includes('пропуск')) {
+    hazards.push('permit_required');
+  }
+  if (payload.weather_unstable || row.description?.toLowerCase().includes('погода изменчива')) {
+    hazards.push('weather_risk');
+  }
+  
+  return hazards;
 }
 
 const QuerySchema = z.object({
@@ -221,7 +238,10 @@ export async function GET(request: NextRequest) {
       success: true,
       data: dataResult.rows.map(r => {
         const payload = (r.payload as Record<string, unknown>) ?? {};
-        const imageUrl = pickPrimaryImage(payload) || getCategoryFallbackImage(r.category as string);
+        const hasAiImage = Boolean(r.has_ai_image);
+        const imageUrl = hasAiImage 
+          ? `/api/images/route/${r.id}` 
+          : (pickPrimaryImage(payload) || getCategoryFallbackImage(r.category as string));
 
         return {
           ...(imageUrl ? { imageUrl } : {}),
@@ -244,7 +264,8 @@ export async function GET(request: NextRequest) {
           bestMonths:   (r.best_months as number[] | null) ?? null,
           geometry:      (r.geometry as { type: string; coordinates: [number, number][]; color?: string; weight?: number } | null) ?? null,
           volcanoStatus: (r.volcano_status as string | null) ?? null,
-          hasAiImage:   Boolean(r.has_ai_image),
+          hasAiImage,
+          hazards:      resolveHazards(r),
         };
       }),
       meta: {
