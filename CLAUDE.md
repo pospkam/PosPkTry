@@ -521,3 +521,4 @@ COPY --from=builder /app/start.js ./start.js
 
 > Статус: MVP завершён. Фаза: эволюция через агентов.
 > Обновлено: Май 2026 | Агенты: `AGENTS.md`
+ 
